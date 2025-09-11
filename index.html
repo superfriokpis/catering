@@ -164,14 +164,7 @@ table.kpi tbody tr td{border-bottom:1px solid #e5edff}
   </form>
 </dialog>
 
-<!-- === DADOS EMBUTIDOS (OPCIONAL) ===
-Cole aqui seu ARRAY de linhas (objetos) já extraído do Excel.
-Exemplo:
-[
-  {"Unidade":"CWB II","Data":"15.09.2025","Volume In (tons)":"12,5","ILA %":"98,7%"},
-  {"Unidade":"CWB II","Data":"16.09.2025","Volume Out (tons)":"8","IRA %":"95%"}
-]
-Se mantiver vazio [], a página permanece aguardando upload normalmente. -->
+<!-- === DADOS EMBUTIDOS (OPCIONAL) === -->
 <script id="seed-data" type="application/json">[]</script>
 
 <script>
@@ -179,6 +172,10 @@ Se mantiver vazio [], a página permanece aguardando upload normalmente. -->
 const LS_METAS='kpiTargets_blue_v1';
 const defaultTargets={onTime:95,inFull:95,fillRate:95,contagem:95,ila:95,ira:95,perdas:8,ocupacao:85,turnover:3,abs:3};
 const ROUTES={arm:'arm',rh:'rh',transp:'transp'}; let activeBlock=ROUTES.arm;
+
+/* === NOVO: Excel estático do repositório === */
+const EXCEL_URL = "data/base.xlsx";   // coloque seu arquivo em /data/base.xlsx
+const EXCEL_SHEET = "Base";           // nome da aba; use null para a primeira
 
 /* COLUNAS */
 const HEAD_ARM=["Unidade","Data","Volume In (tons)","Volume Out (tons)","Corte (KG)","Contagem cíclica","ILA %","IRA %","Paletes Pendentes","Perdas (avarias e diferença de estoque)"];
@@ -189,7 +186,7 @@ const HEAD_TRANSP=["Unidade","Data","Largada (Total de veículos)","Largada (Ve�
 const pctCols=new Set([
   "ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo",
   "Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"
-]); // ← Contagem cíclica REMOVIDA
+]);
 const intCols=new Set(["Paletes Pendentes","Horas Extras Armazém","Horas Extras Transporte","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1"]);
 const moneyCols=new Set(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"]);
 const tonsCols=new Set(["Volume In (tons)","Volume Out (tons)","Volume (tons)"]);
@@ -211,37 +208,28 @@ const parseDateRaw = s=>{
   return new Date(s);
 };
 const asNumber=(v)=>{ if(v===null||v===undefined) return ''; const s=String(v).trim(); if(s===''||isDash(s)) return ''; const n=Number(s.replace(/R\$\s?/i,'').replace(/\./g,'').replace(',','.').replace(/%/g,'')); return Number.isFinite(n)?n:''; };
-const asDateISO=(v)=>{ if(v==null||v===''||isDash(v)) return ''; if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v); if(!d) return ''; return toISODateLocal(d.y,d.m,d.d);} const s=String(v).trim(); const m=s.match(/^(\d{2})[./](\d{2})[./](\d{4})$/); if(m) return toISODateLocal(+m[3],+m[2],+m[1]); const dt=new Date(s); return isNaN(dt)?'':toISODateLocal(dt.getFullYear(),dt.getMonth()+1,dt.getDate()); };
+const asDateISO=(v)=>{ if(v==null||v===''||isDash(v)) return ''; if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v); if(!d) return ''; return toISODateLocal(d.y,d.m,d.d);} const s=String(v).trim(); const m=s.match(/^(\d{2})[./](\d{2})[./](\d{4})$/); if(m) return toISODateLocal(+m[3],+m[2]-1,+m[1]); const dt=new Date(s); return isNaN(dt)?'':toISODateLocal(dt.getFullYear(),dt.getMonth()+1,dt.getDate()); };
 
-/* Normalizador de %: corrige casas decimais deslocadas */
+/* Normalizador de % */
 function normPct(v){
   if(v===''||v==null) return '';
   let n=Number(String(v).replace('%','').replace(/\s/g,'').replace(',','.'));
   if(!Number.isFinite(n)) return '';
-  if(n>0 && n<=1) return n*100;           // proporção 0–1
-  if(n<=100) return n;                    // já em %
-  while(n>100) n/=10;                     // 844 -> 84.4 ; 9305 -> 93.05 ; 9608 -> 96.08
+  if(n>0 && n<=1) return n*100;
+  if(n<=100) return n;
+  while(n>100) n/=10;
   return n;
 }
 
-/* === EMBED: lê dados do <script id="seed-data"> e normaliza como no upload === */
+/* === EMBED JSON opcional === */
 function getSeedData(){
   const el=document.getElementById('seed-data');
   if(!el) return [];
   let raw=[];
-  try{
-    raw = JSON.parse(el.textContent||'[]');
-  }catch(e){
-    console.warn('Seed JSON inválido:', e);
-    return [];
-  }
+  try{ raw = JSON.parse(el.textContent||'[]'); }catch(e){ return []; }
   if(!Array.isArray(raw) || !raw.length) return [];
-  // Normaliza com a MESMA lógica do upload:
-  const rows = raw.map(normalizeRow).filter(o=>!isRowAllBlank(o));
-  return rows;
+  return raw.map(normalizeRow).filter(o=>!isRowAllBlank(o));
 }
-
-/* DADOS (inicializa com o que estiver embutido; se vazio, segue fluxo normal) */
 let DATA = getSeedData();
 
 /* ELEMENTOS */
@@ -285,7 +273,7 @@ function enrich(r){
   const vin=asNumber(r["Volume In (tons)"])||0, vout=asNumber(r["Volume Out (tons)"])||0;
   if(vin>0||vout>0) r["Volume (tons)"]= r["Volume (tons)"]!=='' ? r["Volume (tons)"] : (vin+vout);
   const hea=asNumber(r["Horas Extras Armazém"]), het=asNumber(r["Horas Extras Transporte"]);
-  r["HE armazém e transporte"]=(hea!==''||het!=='')?((hea||0)+(het||0)):'';
+  r["HE armazém e transporte"]=(hea!==''||het!=='')?((hea||0)+(het||0)):''; 
   const lt=asNumber(r["Largada (Total de veículos)"])||0, ln=asNumber(r["Largada (Veículos que saíram no horario)"])||0;
   r["% On-time (calc)"]=lt>0?(ln/lt)*100:'';
   if(r["Custo MOT (armazém e transporte)"]===''||r["Custo MOT (armazém e transporte)"]==null) r["Custo MOT (armazém e transporte)"]='';
@@ -319,7 +307,7 @@ function renderCardsFor(block,sum){
       ['Volume In (t)',sum.sum["Volume In (tons)"],'num',null],
       ['Volume Out (t)',sum.sum["Volume Out (tons)"],'num',null],
       ['Corte (KG)',sum.sum["Corte (KG)"],'num',null],
-      ['Contagem cíclica',sum.avg["Contagem cíclica"],'num',"Contagem cíclica"], // ← sem '%'
+      ['Contagem cíclica',sum.avg["Contagem cíclica"],'num',"Contagem cíclica"],
       ['ILA %',sum.avg["ILA %"],'pct',"ILA %"],
       ['IRA %',sum.avg["IRA %"],'pct',"IRA %"],
       ['Paletes Pendentes',sum.sum["Paletes Pendentes"],'num',null],
@@ -372,17 +360,16 @@ function renderBody(tbodyEl,HEADERS,list,rowsInfoEl){
 
 /* NAVEGAÇÃO */
 function getActiveFromHash(){ const h=(location.hash||'#arm').replace('#',''); if(h===ROUTES.rh) return ROUTES.rh; if(h===ROUTES.transp) return ROUTES.transp; return ROUTES.arm; }
-function setActiveBlock(block){ activeBlock=block; tabArm.setAttribute('aria-current',block===ROUTES.arm?'page':'false'); tabRH.setAttribute('aria-current',block===ROUTES.rh?'page':'false'); tabTransp.setAttribute('aria-current',block===ROUTES.transp?'page':'false'); secArm.classList.toggle('hidden',block!==ROUTES.arm); secRH.classList.toggle('hidden',block!==ROUTES.rh); secTransp.classList.toggle('hidden',block!==ROUTES.transp); refresh(); }
+function setActiveBlock(block){ activeBlock=block; tabArm.setAttribute('aria-current',block===ROUTES.arm?'page':'false'); tabRH.setAttribute('aria-current',block===ROUTES.rh?'page':'false'); tabTransp.setAttribute('aria-current',block!==ROUTES.transp?'false':'page'); secArm.classList.toggle('hidden',block!==ROUTES.arm); secRH.classList.toggle('hidden',block!==ROUTES.rh); secTransp.classList.toggle('hidden',block!==ROUTES.transp); refresh(); }
 window.addEventListener('hashchange',()=>setActiveBlock(getActiveFromHash()));
 
-/* === IMPORTAÇÃO / NORMALIZAÇÃO === */
-const PCT = new Set(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"]); // Contagem cíclica fora
+/* IMPORTAÇÃO / NORMALIZAÇÃO */
+const PCT = new Set(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"]);
 const MONEY = new Set(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"]);
 const INTLIKE = new Set(["Paletes Pendentes","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Horas Extras Armazém","Horas Extras Transporte"]);
 const TONS = new Set(["Volume In (tons)","Volume Out (tons)","Volume (tons)"]);
 const KEY_NUMERIC = new Set(["Volume In (tons)","Volume Out (tons)","Corte (KG)","Paletes Pendentes","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Ocorrências em R$ D-1","Contagem cíclica","ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)","Volume (tons)"]);
 
-/* Normalização padrão */
 const normalizeRow=(row)=>{
   const o={};
   for(const k in row){ const key=String(k).trim(); const val=isDash(row[k])?'':row[k]; o[key]=val; }
@@ -401,15 +388,13 @@ const normalizeRow=(row)=>{
   }
   return o;
 };
-
-/* Regra: excluir linhas totalmente vazias */
 const isRowAllBlank=(o)=>{
   if(!o["Unidade"]||!o["Data"]) return true;
   for(const k of KEY_NUMERIC){ const v=o[k]; if(v!=='' && Number(v)!==0) return false; }
   return true;
 };
 
-/* CSV */
+/* CSV (fallback manual) */
 function parseCSV(text){
   const delimiter=text.indexOf(';')>-1?';':',';
   const lines=text.trim().split(/\r?\n/);
@@ -435,10 +420,10 @@ function parseCSV(text){
 function openMetas(){const t=getTargets(); m_onTime.value=t.onTime; m_inFull.value=t.inFull; m_fillRate.value=t.fillRate; m_contagem.value=t.contagem; m_ila.value=t.ila; m_ira.value=t.ira; m_perdas.value=t.perdas; m_ocupacao.value=t.ocupacao; m_turnover.value=t.turnover; m_abs.value=t.abs; modalMetas.showModal();}
 function saveMetas(){ const t={onTime:+(m_onTime.value||defaultTargets.onTime),inFull:+(m_inFull.value||defaultTargets.inFull),fillRate:+(m_fillRate.value||defaultTargets.fillRate),contagem:+(m_contagem.value||defaultTargets.contagem),ila:+(m_ila.value||defaultTargets.ila),ira:+(m_ira.value||defaultTargets.ira),perdas:+(m_perdas.value||defaultTargets.perdas),ocupacao:+(m_ocupacao.value||defaultTargets.ocupacao),turnover:+(m_turnover.value||defaultTargets.turnover),abs:+(m_abs.value||defaultTargets.abs)}; saveTargets(t); renderBadges(); refresh(); modalMetas.close(); }
 
-/* Filtro por bloco: evita linhas vazias no bloco ativo */
+/* Filtro por bloco */
 const hasAnyForHeaders=(row,HEADERS)=> HEADERS.slice(2).some(h=>{ const v=row[h]; if(v===''||v==null) return false; const n=Number(v); return Number.isFinite(n)?n!==0:String(v).trim()!==''; });
 
-/* PIPELINE */
+/* HEADERS/TABELAS */
 function renderHeadsOnce(){ if(!theadArm.hasChildNodes()) renderHead(theadArm,HEAD_ARM); if(!theadRH.hasChildNodes()) renderHead(theadRH,HEAD_RH); if(!theadTransp.hasChildNodes()) renderHead(theadTransp,HEAD_TRANSP); }
 function refresh(){
   const enriched=DATA.map(r=>enrich({...r}));
@@ -451,12 +436,52 @@ function refresh(){
   else if(activeBlock===ROUTES.rh) renderBody(tbodyRH,HEAD_RH,filteredForBlock,rowsRH);
   else renderBody(tbodyTransp,HEAD_TRANSP,filteredForBlock,rowsTransp);
 }
+
+/* === NOVO: carregar Excel do repositório no boot === */
+async function loadExcelFromRepo(){
+  try{
+    const res = await fetch(EXCEL_URL, {cache:"no-store"});
+    if(!res.ok) throw new Error(`Não encontrei ${EXCEL_URL} (HTTP ${res.status})`);
+    const ab = await res.arrayBuffer();
+    const wb = XLSX.read(ab,{type:'array'});
+    const ws = wb.Sheets[EXCEL_SHEET] || wb.Sheets[wb.SheetNames[0]];
+    if(!ws) throw new Error(`Aba não encontrada: ${EXCEL_SHEET||'(primeira aba)'}`);
+
+    // Recorte igual ao seu upload: cabeçalho na linha 3 e começa na coluna B
+    const ref = XLSX.utils.decode_range(ws['!ref']);
+    ref.s.r = Math.max(ref.s.r, 2);  // linha 3 (0-based)
+    ref.s.c = Math.max(ref.s.c, 1);  // coluna B (0-based)
+    const newRef = XLSX.utils.encode_range(ref);
+
+    let rows = XLSX.utils.sheet_to_json(ws,{defval:"",range:newRef});
+    rows = rows.map(normalizeRow).filter(o=>!isRowAllBlank(o));
+    if(!rows.length) throw new Error("Planilha vazia após normalização.");
+    DATA = rows;
+    console.log('CARREGADO_DO_REPO:', {linhas: DATA.length, aba: (EXCEL_SHEET||wb.SheetNames[0])});
+  }catch(err){
+    console.warn("Falha ao carregar Excel do repositório:", err);
+    // Mantém DATA como está (pode vir do seed-data) e o usuário ainda pode usar o botão de upload manual se quiser
+  }
+}
+
+/* Inicialização UI (datas, abas, unidades) */
 function bootstrap(){
-  renderUnits(DATA);
-  const minD=new Date(Math.min(...DATA.map(r=>+parseDateRaw(r.Data)))); const maxD=new Date(Math.max(...DATA.map(r=>+parseDateRaw(r.Data))));
-  if(!isNaN(minD)) dateStart.value=toISODateLocal(minD.getFullYear(),minD.getMonth()+1,minD.getDate());
-  if(!isNaN(maxD)) dateEnd.value=toISODateLocal(maxD.getFullYear(),maxD.getMonth()+1,maxD.getDate());
-  setActiveBlock(getActiveFromHash()); if(!location.hash) history.replaceState(null,'','#'+activeBlock);
+  const hasData = Array.isArray(DATA) && DATA.length>0;
+  const afterDataReady = ()=>{
+    renderUnits(DATA);
+    const minD=new Date(Math.min(...DATA.map(r=>+parseDateRaw(r.Data))));
+    const maxD=new Date(Math.max(...DATA.map(r=>+parseDateRaw(r.Data))));
+    if(!isNaN(minD)) dateStart.value=toISODateLocal(minD.getFullYear(),minD.getMonth()+1,minD.getDate());
+    if(!isNaN(maxD)) dateEnd.value=toISODateLocal(maxD.getFullYear(),maxD.getMonth()+1,maxD.getDate());
+    setActiveBlock(getActiveFromHash()); if(!location.hash) history.replaceState(null,'','#'+activeBlock);
+  };
+
+  if(hasData){
+    afterDataReady();
+  }else{
+    // tenta Excel estático do repositório
+    loadExcelFromRepo().then(afterDataReady);
+  }
 }
 
 /* EVENTOS */
@@ -468,7 +493,7 @@ closeMetas.addEventListener('click',e=>{e.preventDefault();modalMetas.close();})
 btnSalvarMetas.addEventListener('click',e=>{e.preventDefault();saveMetas();});
 modalMetas.addEventListener('cancel',()=>modalMetas.close());
 
-/* IMPORTAÇÃO */
+/* IMPORTAÇÃO MANUAL (fallback opcional) */
 csvInput.addEventListener('change',async e=>{
   const f=e.target.files?.[0]; if(!f) return;
   if(/\.(xlsx|xls)$/i.test(f.name)){
@@ -477,7 +502,6 @@ csvInput.addEventListener('change',async e=>{
     let rows=XLSX.utils.sheet_to_json(ws,{defval:"",range:newRef});
     rows=rows.map(normalizeRow).filter(o=>!isRowAllBlank(o));
     DATA=rows; console.log('COPIE_ESSE_JSON:', JSON.stringify(DATA));
-
   }else{
     DATA=parseCSV(await f.text()).map(normalizeRow).filter(o=>!isRowAllBlank(o));
     console.log('COPIE_ESSE_JSON:', JSON.stringify(DATA));
