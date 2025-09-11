@@ -586,5 +586,229 @@ bootstrap();
   requestAnimationFrame(fit);
 })();
 </script>
+<!-- === INSIGHT ENGINE (colar antes de </body>) === -->
+<style>
+  .insights-fab{position:fixed;right:18px;bottom:18px;z-index:9999;padding:.9rem 1.1rem;border-radius:999px;border:1px solid #cfe0ff;background:#0b3a8a;color:#fff;font-weight:600;box-shadow:0 8px 20px rgba(0,0,0,.18);cursor:pointer}
+  .insights-panel{position:fixed;right:18px;bottom:86px;z-index:9999;width:min(720px,92vw);max-height:75vh;overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 20px 40px rgba(2,6,23,.18)}
+  .insights-panel header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #eef2ff;background:linear-gradient(90deg,#0b3a8a,#1673ff);color:#fff;border-top-left-radius:16px;border-top-right-radius:16px}
+  .insights-panel section{padding:14px 16px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:.18rem .5rem;border-radius:999px;border:1px solid #e5e7eb;font-size:12px;background:#f8fafc;color:#0f172a}
+  .ok{color:#065f46} .warn{color:#92400e} .bad{color:#991b1b}
+  .list{margin:8px 0 0 0;padding-left:16px}
+  .list li{margin:4px 0}
+  .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;background:#f3f4f6;border:1px solid #e5e7eb;border-bottom-width:2px;padding:.05rem .35rem;border-radius:6px}
+</style>
+
+<button class="insights-fab" id="btnInsights">Analisar KPIs</button>
+<div class="insights-panel" id="panelInsights" style="display:none">
+  <header>
+    <strong>Insights automáticos — KPIs</strong>
+    <button id="closeInsights" class="chip" title="Fechar">Fechar ✕</button>
+  </header>
+  <section id="insightsContent">
+    <div class="chip">Lendo KPIs da tela…</div>
+  </section>
+</div>
+
+<script>
+(()=>{
+// ====== CONFIG: limiares (ajuste como quiser) ======
+const THRESH = {
+  ONTIME_OK:95, ONTIME_CRIT:90,
+  INFULL_OK:95, INFULL_CRIT:90,
+  FILL_OK:98, FILL_CRIT:95,
+  ILA_OK:100, IRA_OK:100, // 100% esperado
+  PERDAS_WARN:0.3, PERDAS_CRIT:1.0, // %
+  OCUP_OK_MIN:85, OCUP_OK_MAX:95,  // % faixa saudável
+  TURNOVER_WARN:5, TURNOVER_CRIT:10, // %
+  ABSENT_WARN:3, ABSENT_CRIT:5     // %
+};
+
+// ====== Util ======
+const pct = v => (v!=null && !Number.isNaN(v)) ? `${v.toFixed(2)}%` : "—";
+function toNum(s){
+  if(!s) return NaN;
+  const m = String(s).replace(/\s/g,'').match(/-?\d+(?:[\.,]\d+)?/);
+  if(!m) return NaN;
+  return parseFloat(m[0].replace('.','').replace(',','.'));
+}
+function findClosestPercentage(el){
+  // procura no próprio elemento e nos vizinhos próximos
+  const text = (el.innerText||"") + " " + ([...el.querySelectorAll('*')].map(e=>e.innerText).join(' ')||"");
+  let m = text.match(/-?\d{1,3}(?:[\.,]\d+)?\s*%/);
+  if(m) return toNum(m[0]);
+  // tenta números que provavelmente são %
+  m = text.match(/-?\d{1,3}(?:[\.,]\d+)?/);
+  if(m) return toNum(m[0]);
+  return NaN;
+}
+
+// Mapeia rótulos -> chaves de KPI
+const LABELS = [
+  {key:'onTime', re:/(on[\s-]?time|ontime)/i},
+  {key:'inFull', re:/(in\s*full|infull|if\b)/i},
+  {key:'fillRate', re:/(fill\s*rate|fillrate|fr\b)/i},
+  {key:'ila', re:/\bila\b/i},
+  {key:'ira', re:/\bira\b/i},
+  {key:'perdas', re:/(perdas|avarias|diferen[çc]a\s*de\s*estoque)/i},
+  {key:'ocupacao', re:/(ocupa[cç][aã]o|ocupacao)/i},
+  {key:'turnover', re:/turnover/i},
+  {key:'absenteismo', re:/(absent(e[i]s)?[ií]smo|absenteismo)/i},
+];
+
+// Estratégias de coleta:
+// 1) Elementos com data-kpi e data-value (opcional, se você já tiver).
+// 2) Buscar por rótulos conhecidos na tela e ler o número mais próximo.
+function collectKPIsFromDataAttrs(){
+  const out = {};
+  document.querySelectorAll('[data-kpi]').forEach(el=>{
+    const key = String(el.getAttribute('data-kpi')||'').trim();
+    let v = el.getAttribute('data-value');
+    v = v!=null ? toNum(v) : findClosestPercentage(el);
+    if(!Number.isNaN(v)) out[key]=v;
+  });
+  return out;
+}
+function collectKPIsFromLabels(){
+  const out = {};
+  const all = [...document.querySelectorAll('body *')]
+    .filter(el=>el.children.length===0 && (el.innerText||'').trim().length>0);
+  LABELS.forEach(({key,re})=>{
+    // procura o melhor candidato de rótulo
+    let best = null, bestDist = Infinity;
+    all.forEach(el=>{
+      if(re.test(el.innerText)){
+        // distância: elementos com número % por perto
+        const v = findClosestPercentage(el);
+        if(!Number.isNaN(v)){
+          const d = 0; // mesmo elemento já tem número
+          if(d<bestDist){best={el,v};bestDist=d;}
+        }else{
+          // tenta vizinhos
+          const sibs = [...(el.parentElement?.children||[])];
+          for(const s of sibs){
+            const vv = findClosestPercentage(s);
+            if(!Number.isNaN(vv)){
+              const d = 1;
+              if(d<bestDist){best={el:s,v:vv};bestDist=d;}
+            }
+          }
+        }
+      }
+    });
+    if(best && !Number.isNaN(best.v)) out[key]=best.v;
+  });
+  return out;
+}
+
+function mergePriority(a,b){ return {...a, ...b}; } // attrs > labels (troque se quiser)
+function getKPIs(){
+  const byAttrs  = collectKPIsFromDataAttrs();
+  const byLabels = collectKPIsFromLabels();
+  // Prioriza atributos explícitos; completa com o que achar por rótulos
+  return mergePriority(byLabels, byAttrs);
+}
+
+// ====== Regras (heurísticas) ======
+function analyze(k){
+  const good=[], warn=[], bad=[], suggest=[];
+  const push = (arr,msg)=>arr.push(msg);
+
+  const o = k.onTime; if(!Number.isNaN(o)){
+    if(o>=THRESH.ONTIME_OK) push(good, `On-time ${pct(o)} dentro/above da meta (≥ ${THRESH.ONTIME_OK}%).`);
+    else if(o>=THRESH.ONTIME_CRIT) { push(warn, `On-time ${pct(o)} abaixo da meta. Meta: ${THRESH.ONTIME_OK}%.`); suggest.push(`Revisar causas de atraso (janela de corte, carga/descarga, rotas).`); }
+    else { push(bad, `On-time crítico em ${pct(o)} (< ${THRESH.ONTIME_CRIT}%).`); suggest.push(`Plano de ação imediato para atrasos recorrentes e gargalos.`); }
+  }
+  const inf = k.inFull; if(!Number.isNaN(inf)){
+    if(inf>=THRESH.INFULL_OK) push(good, `In-Full ${pct(inf)} saudável (≥ ${THRESH.INFULL_OK}%).`);
+    else if(inf>=THRESH.INFULL_CRIT){ push(warn, `In-Full ${pct(inf)} pede atenção.`); suggest.push(`Checar rupturas/picking incompleto e acurácia de estoque.`); }
+    else { push(bad, `In-Full crítico em ${pct(inf)}.`); suggest.push(`Ação em causas-raiz: planejamento, estoque de segurança, SLA fornecedores.`); }
+  }
+  const fr = k.fillRate; if(!Number.isNaN(fr)){
+    if(fr>=THRESH.FILL_OK) push(good, `Fill Rate ${pct(fr)} excelente (≥ ${THRESH.FILL_OK}%).`);
+    else if(fr>=THRESH.FILL_CRIT){ push(warn, `Fill Rate ${pct(fr)} abaixo do ideal.`); suggest.push(`Ajustar políticas de reposição e priorização de pedidos.`); }
+    else { push(bad, `Fill Rate ${pct(fr)} muito baixo.`); suggest.push(`Rever forecast e alinhamento comercial/logística.`); }
+  }
+  const ila = k.ila; if(!Number.isNaN(ila)){
+    if(ila>=THRESH.ILA_OK) push(good, `ILA ${pct(ila)} ok (alvo 100%).`);
+    else { push(warn, `ILA ${pct(ila)} abaixo de 100%.`); suggest.push(`Corrigir lançamentos/processos que afetam disponibilidade.`); }
+  }
+  const ira = k.ira; if(!Number.isNaN(ira)){
+    if(ira>=THRESH.IRA_OK) push(good, `IRA ${pct(ira)} ok (alvo 100%).`);
+    else { push(warn, `IRA ${pct(ira)} abaixo de 100%.`); suggest.push(`Atuar em recebimento, conferência e integridade dos itens.`); }
+  }
+  const perdas = k.perdas; if(!Number.isNaN(perdas)){
+    if(perdas<=THRESH.PERDAS_WARN) push(good, `Perdas ${pct(perdas)} controladas (≤ ${THRESH.PERDAS_WARN}%).`);
+    else if(perdas<=THRESH.PERDAS_CRIT) { push(warn, `Perdas ${pct(perdas)} elevadas.`); suggest.push(`Foco em causas (avarias, validade, diferença de estoque).`); }
+    else { push(bad, `Perdas ${pct(perdas)} críticas.`); suggest.push(`Ação corretiva urgente (embalagem, manuseio, inventário).`); }
+  }
+  const oc = k.ocupacao; if(!Number.isNaN(oc)){
+    if(oc>=THRESH.OCUP_OK_MIN && oc<=THRESH.OCUP_OK_MAX) push(good, `Ocupação ${pct(oc)} saudável (${THRESH.OCUP_OK_MIN}–${THRESH.OCUP_OK_MAX}%).`);
+    else if(oc>THRESH.OCUP_OK_MAX){ push(warn, `Ocupação ${pct(oc)} alta (risco de overflow).`); suggest.push(`Planejar ressuprimento/saídas e realocação de posições.`); }
+    else { push(warn, `Ocupação ${pct(oc)} baixa (subutilização).`); suggest.push(`Ajustar mix/entrada de clientes e uso de área.`); }
+  }
+  const t = k.turnover; if(!Number.isNaN(t)){
+    if(t<=THRESH.TURNOVER_WARN) push(good, `Turnover ${pct(t)} sob controle (≤ ${THRESH.TURNOVER_WARN}%).`);
+    else if(t<=THRESH.TURNOVER_CRIT){ push(warn, `Turnover ${pct(t)} pede atenção.`); suggest.push(`Reter talentos críticos e reforçar treinamento.`); }
+    else { push(bad, `Turnover ${pct(t)} muito alto.`); suggest.push(`Plano de retenção e revisão de escalas/benefícios.`); }
+  }
+  const ab = k.absenteismo; if(!Number.isNaN(ab)){
+    if(ab<=THRESH.ABSENT_WARN) push(good, `Absenteísmo ${pct(ab)} ok (≤ ${THRESH.ABSENT_WARN}%).`);
+    else if(ab<=THRESH.ABSENT_CRIT){ push(warn, `Absenteísmo ${pct(ab)} elevado.`); suggest.push(`Acompanhar faltas reincidentes e cobertura de turnos.`); }
+    else { push(bad, `Absenteísmo ${pct(ab)} crítico.`); suggest.push(`Ação imediata em clima, transporte e saúde ocupacional.`); }
+  }
+
+  return {good, warn, bad, suggest};
+}
+
+function renderInsights(res){
+  const root = document.getElementById('insightsContent');
+  const sect = (title, cls, arr)=> arr.length? `
+    <h3 class="${cls}" style="margin:.4rem 0 .2rem 0;font-weight:700">${title}</h3>
+    <ul class="list">${arr.map(x=>`<li>${x}</li>`).join('')}</ul>
+  ` : '';
+  root.innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.5rem">
+      <span class="chip">Leituras automáticas da tela</span>
+      <span class="chip">Sem envio de dados</span>
+      <span class="chip">Ajuste os limiares no script</span>
+    </div>
+    ${sect('✔︎ O que está bom', 'ok', res.good)}
+    ${sect('⚠︎ Pontos de atenção', 'warn', res.warn)}
+    ${sect('⛔ Riscos / críticos', 'bad', res.bad)}
+    ${sect('💡 Sugestões', '', res.suggest)}
+    <div style="margin-top:.8rem;font-size:12px;color:#475569">
+      Dica: para leituras 100% precisas, adicione <span class="kbd">data-kpi</span> e <span class="kbd">data-value</span> nos cards (ex.: <span class="kbd">&lt;div data-kpi="onTime" data-value="94.2"&gt;</span>).
+    </div>
+  `;
+}
+
+// ====== UI ======
+const btn = document.getElementById('btnInsights');
+const panel = document.getElementById('panelInsights');
+const closeBtn = document.getElementById('closeInsights');
+
+async function runAnalysis(){
+  const kpis = getKPIs();
+  const res = analyze(kpis);
+  renderInsights(res);
+}
+
+btn.addEventListener('click', ()=>{
+  panel.style.display = panel.style.display==='none' ? 'block' : 'none';
+  if(panel.style.display==='block') runAnalysis();
+});
+closeBtn.addEventListener('click', ()=> panel.style.display='none');
+
+// opcional: abrir com ALT+I
+document.addEventListener('keydown', (e)=>{
+  if(e.altKey && (e.key==='i' || e.key==='I')) {
+    btn.click();
+  }
+});
+})();
+</script>
+<!-- === /INSIGHT ENGINE === -->
+
 </body>
 </html>
