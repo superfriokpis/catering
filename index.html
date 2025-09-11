@@ -173,9 +173,9 @@ const LS_METAS='kpiTargets_blue_v1';
 const defaultTargets={onTime:95,inFull:95,fillRate:95,contagem:95,ila:95,ira:95,perdas:8,ocupacao:85,turnover:3,abs:3};
 const ROUTES={arm:'arm',rh:'rh',transp:'transp'}; let activeBlock=ROUTES.arm;
 
-/* === NOVO: Excel estático do repositório === */
-const EXCEL_URL = "data/base.xlsx";   // coloque seu arquivo em /data/base.xlsx
-const EXCEL_SHEET = "Base";           // nome da aba; use null para a primeira
+const EXCEL_URL = "data/BI Operacional_Catering.xlsx"; // exatamente como está no repo
+const EXCEL_SHEET = null; // usa a 1ª aba da planilha (ou coloque o nome exato da aba se preferir)
+
 
 /* COLUNAS */
 const HEAD_ARM=["Unidade","Data","Volume In (tons)","Volume Out (tons)","Corte (KG)","Contagem cíclica","ILA %","IRA %","Paletes Pendentes","Perdas (avarias e diferença de estoque)"];
