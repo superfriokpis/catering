@@ -43,6 +43,51 @@ table.kpi tbody tr td{border-bottom:1px solid #e5edff}
 }
 .legend-dot{width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:.35rem}
 .dot-ok{background:#16a34a}.dot-warn{background:#f59e0b}.dot-bad{background:#ef4444}
+
+/* =========================
+   AJUSTES PREMIUM DOS CARDS
+   (somente tipografia/espaçamento dos KPIs)
+   ========================= */
+#cards > div{
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:.48rem .56rem;         /* menor padding para caber mais conteúdo */
+  border-radius:14px;            /* sutilmente mais premium */
+}
+#cards > div .text-[12px]{       /* título do card */
+  font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:11px;                /* menor */
+  line-height:1.15;
+  font-weight:500;
+  letter-spacing:-0.2px;
+  color:#475569;
+  white-space:nowrap;            /* sem quebra */
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#cards > div .text-lg{           /* número principal do card */
+  font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:clamp(12px,1.05vw,15px);  /* menor e responsivo */
+  line-height:1.15;
+  font-weight:600;
+  font-variant-numeric:tabular-nums;  /* algarismos alinhados */
+  letter-spacing:-0.2px;
+  white-space:nowrap;            /* sem quebra */
+  overflow:hidden;
+  text-overflow:ellipsis;        /* evita transbordo */
+}
+/* Valor monetário: menor para caber no card sem cortar dígitos */
+#cards > div .text-lg.is-money{
+  font-size:clamp(10px,0.75vw,12px);
+  line-height:1.1;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1, "lnum" 1;
+  letter-spacing:-0.3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:clip;  /* sem reticências */
+}
 </style>
 </head>
 <body>
@@ -53,7 +98,7 @@ table.kpi tbody tr td{border-bottom:1px solid #e5edff}
         <svg width="26" height="26" viewBox="0 0 24 24" class="opacity-90" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" opacity=".3"/><path fill="currentColor" d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z"/></svg>
         <div>
           <h1 class="text-base font-semibold">KPIs — Armazém | RH | Transporte</h1>
-          <p class="text-[12px] opacity-90">Superfrio Kpis</p>
+          <p class="text-[12px] opacity-90">Filtro único • Navegação por blocos • Metas com cores</p>
         </div>
       </div>
 
@@ -299,7 +344,18 @@ function statusOf(metric,value){ const t=getTargets(); const conf=targetMap[metr
 
 /* RENDER */
 function renderBadges(){ const t=getTargets(); const items=[["On-time",t.onTime],["Fill Rate",t.fillRate],["In Full",t.inFull],["Contagem",t.contagem],["ILA",t.ila],["IRA",t.ira],["Perdas (máx)",t.perdas],["Ocupação",t.ocupacao],["Turnover (máx)",t.turnover],["Absenteísmo (máx)",t.abs]]; metasBadges.innerHTML=''; items.forEach(([k,v])=>{const s=document.createElement('span'); s.className='pill'; s.textContent=`${k}: ${v}%`; metasBadges.appendChild(s);}); }
-function cardHTML(label,value,type,metricKeyForStatus){ let txt=''; if(type==='money')txt=fmt.money(value); else if(type==='pct')txt=fmt.pct(value); else txt=fmt.num(value); const st=metricKeyForStatus?statusOf(metricKeyForStatus,Number(value)):'neutral'; return `<div class="${st} rounded-xl p-3 border"><div class="text-[12px] text-slate-700">${label}</div><div class="mt-1 text-lg font-semibold text-slate-900">${txt||'-'}</div></div>`; }
+function cardHTML(label,value,type,metricKeyForStatus){
+  let txt='';
+  if(type==='money')      txt=fmt.money(value);
+  else if(type==='pct')   txt=fmt.pct(value);
+  else                    txt=fmt.num(value);
+  const st=metricKeyForStatus?statusOf(metricKeyForStatus,Number(value)):'neutral';
+  const valueCls = `mt-1 text-lg font-semibold text-slate-900${type==='money' ? ' is-money' : ''}`;
+  return `<div class="${st} rounded-xl p-3 border">
+            <div class="text-[12px] text-slate-700">${label}</div>
+            <div class="${valueCls}">${txt||'-'}</div>
+          </div>`;
+}
 function renderCardsFor(block,sum){
   let cardsArr=[];
   if(block===ROUTES.arm){
