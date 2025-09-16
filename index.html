@@ -44,59 +44,26 @@ table.kpi tbody tr td{border-bottom:1px solid #e5edff}
 .legend-dot{width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:.35rem}
 .dot-ok{background:#16a34a}.dot-warn{background:#f59e0b}.dot-bad{background:#ef4444}
 
-/* =========================
-   AJUSTES PREMIUM DOS CARDS
-   (somente tipografia/espaçamento dos KPIs)
-   ========================= */
-#cards > div{
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  padding:.48rem .56rem;         /* compact */
-  border-radius:14px;
-}
-#cards > div .text-[12px]{       /* título do card */
-  font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
-  font-size:11px;
-  line-height:1.15;
-  font-weight:500;
-  letter-spacing:-0.2px;
-  color:#475569;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-#cards > div .text-lg{           /* número principal */
-  font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
-  font-size:clamp(12px,1.05vw,15px);
-  line-height:1.15;
-  font-weight:600;
-  font-variant-numeric:tabular-nums;
-  letter-spacing:-0.2px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-/* Valor monetário */
-#cards > div .text-lg.is-money{
-  font-size:clamp(10px,0.75vw,12px);
-  line-height:1.1;
-  font-variant-numeric:tabular-nums;
-  font-feature-settings:"tnum" 1, "lnum" 1;
-  letter-spacing:-0.3px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:clip;
-}
+/* Premium cards typography */
+#cards > div{display:flex;flex-direction:column;justify-content:space-between;padding:.48rem .56rem;border-radius:14px;}
+#cards > div .text-[12px]{font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;font-size:11px;line-height:1.15;font-weight:500;letter-spacing:-0.2px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#cards > div .text-lg{font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;font-size:clamp(12px,1.05vw,15px);line-height:1.15;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#cards > div .text-lg.is-money{font-size:clamp(10px,0.75vw,12px);line-height:1.1;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1, "lnum" 1;letter-spacing:-0.3px;white-space:nowrap;overflow:hidden;text-overflow:clip;}
 
-/* ====== Estilos do Farol ====== */
-.farol-table { width:100%; border-collapse:separate; border-spacing:0; }
-.farol-table th, .farol-table td { padding:.45rem .5rem; border-bottom:1px solid #e5edff; vertical-align:top; }
-.farol-badge { display:inline-flex; align-items:center; gap:6px; padding:.15rem .5rem; border-radius:999px; border:1px solid #e5e7eb; background:#f8fafc; }
-.dot { width:10px; height:10px; border-radius:999px; display:inline-block; }
-.dot-green { background:#16a34a; } .dot-amber { background:#f59e0b; } .dot-red { background:#ef4444; }
-.block-title { font-weight:700; font-size:12px; color:var(--azul); text-transform:uppercase; }
-.wrap-small { white-space:normal; max-width:520px; }
+/* === Farol (modal e tabela) === */
+.fab{position:fixed;right:18px;bottom:18px;z-index:9999;padding:.9rem 1.1rem;border-radius:999px;border:1px solid #cfe0ff;background:#0b3a8a;color:#fff;font-weight:600;box-shadow:0 8px 20px rgba(0,0,0,.18);cursor:pointer}
+#modalFarol::backdrop{background:rgba(2,6,23,.46)}
+#modalFarol .hdr{background:linear-gradient(90deg,#0b3a8a,#1673ff);color:#fff}
+.faro-legend .chip{display:inline-flex;align-items:center;gap:8px;font-size:12px;padding:.2rem .6rem;border-radius:999px;background:#f8fafc;border:1px solid #e2e8f0}
+.dot{display:inline-block;width:12px;height:12px;border-radius:999px}
+.dot.g{background:#22c55e}.dot.y{background:#f59e0b}.dot.r{background:#ef4444}
+.tbl-farol{width:100%;border-collapse:separate;border-spacing:0}
+.tbl-farol th{font-size:12px;background:#0b3a8a;color:#fff;text-align:left;padding:10px;border-top-left-radius:8px;border-top-right-radius:8px}
+.tbl-farol td{padding:12px 10px;border-bottom:1px solid #eef2ff}
+.tbl-farol tr:hover td{background:#f8fbff}
+.cell-dot{display:flex;align-items:center;gap:8px}
+.minimal-input{border:1px solid #dbeafe;border-radius:10px;padding:8px 10px;font-size:12px;min-width:280px}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:12px}
 </style>
 </head>
 <body>
@@ -123,8 +90,6 @@ table.kpi tbody tr td{border-bottom:1px solid #e5edff}
         </label>
         <button id="btnMetas" class="btn btn-primary" type="button">Metas de KPI</button>
         <button id="btnReset" class="btn bg-white" type="button">Resetar filtros</button>
-        <!-- NOVO: Botão Farol -->
-        <button id="btnFarol" class="btn bg-white" type="button">Farol de preenchimento</button>
       </div>
     </div>
 
@@ -220,27 +185,41 @@ table.kpi tbody tr td{border-bottom:1px solid #e5edff}
   </form>
 </dialog>
 
-<!-- NOVO: Modal Farol -->
-<dialog id="modalFarol" class="rounded-2xl p-0 w-[900px] max-w-[95vw]">
-  <form method="dialog" class="bg-white rounded-2xl border border-[var(--borda)]">
-    <div class="px-4 py-3 border-b border-[var(--borda)] bg-[var(--azul-claro)] flex items-center justify-between">
-      <h3 class="text-sm font-semibold text-[var(--azul)]">Farol de preenchimento</h3>
-      <div class="flex gap-2 items-center">
-        <span class="pill"><span class="inline-block w-2.5 h-2.5 rounded-full bg-[#16a34a] mr-1"></span>Verde = completo</span>
-        <span class="pill"><span class="inline-block w-2.5 h-2.5 rounded-full bg-[#f59e0b] mr-1"></span>Amarelo = parcial</span>
-        <span class="pill"><span class="inline-block w-2.5 h-2.5 rounded-full bg-[#ef4444] mr-1"></span>Vermelho = faltando</span>
+<!-- === Modal Farol === -->
+<dialog id="modalFarol" class="rounded-2xl p-0 w-[1200px] max-w-[96vw]">
+  <div class="bg-white rounded-2xl border border-[var(--borda)] overflow-hidden">
+    <div class="hdr px-4 py-3 flex items-center justify-between">
+      <div class="text-sm font-semibold">Farol de Preenchimento — Visão rápida</div>
+      <div class="flex items-center gap-3 faro-legend">
+        <span class="chip"><span class="dot g"></span> Preenchido</span>
+        <span class="chip"><span class="dot y"></span> Parcial (bloco)</span>
+        <span class="chip"><span class="dot r"></span> Faltando</span>
+        <button id="btnCloseFarol" class="chip" type="button">Fechar ✕</button>
       </div>
     </div>
-    <div class="p-3 text-[12px] text-slate-700">
-      <p class="mb-2">
-        <strong>Regras de data:</strong> Transporte (Largada total, No horário, Ocupação) = <em>hoje</em>. Demais campos (Transporte, Armazém e RH) = <em>ontem</em>.
-      </p>
-      <div id="farolContainer" class="space-y-4"></div>
+    <div class="px-4 py-3 text-[12px] text-slate-600" id="farolHeaderInfo">—</div>
+    <div class="px-4 pb-3 flex items-center gap-3">
+      <label class="text-[12px] flex items-center gap-2">Unidades:
+        <input id="farolFilter" class="minimal-input" placeholder="Filtrar por nome (ex.: CWB3, FOR, ...)" />
+      </label>
+      <label class="switch"><input id="farolOnlyMissing" type="checkbox"/> Mostrar apenas faltando</label>
+      <button id="btnFarolPrint" class="btn">Imprimir / Copiar</button>
     </div>
-    <div class="px-4 py-3 border-t border-[var(--borda)] flex justify-end gap-2">
-      <button id="btnFecharFarol" class="btn" type="button">Fechar</button>
+    <div class="px-4 pb-5 overflow-auto">
+      <table class="tbl-farol w-full">
+        <thead>
+          <tr>
+            <th class="rounded-tl-lg w-[22%]">Unidade</th>
+            <th>Armazém (D-1)</th>
+            <th>RH (D-1)</th>
+            <th>Transporte (D)</th>
+            <th class="rounded-tr-lg">Transporte (D-1)</th>
+          </tr>
+        </thead>
+        <tbody id="farolBody"></tbody>
+      </table>
     </div>
-  </form>
+  </div>
 </dialog>
 
 <!-- === DADOS EMBUTIDOS (OPCIONAL) === -->
@@ -252,9 +231,8 @@ const LS_METAS='kpiTargets_blue_v1';
 const defaultTargets={onTime:95,inFull:95,fillRate:95,contagem:95,ila:95,ira:95,perdas:8,ocupacao:85,turnover:3,abs:3};
 const ROUTES={arm:'arm',rh:'rh',transp:'transp'}; let activeBlock=ROUTES.arm;
 
-const EXCEL_URL = "data/BI Operacional_Catering.xlsx"; // exatamente como está no repo
-const EXCEL_SHEET = null; // usa a 1ª aba da planilha (ou coloque o nome exato da aba se preferir)
-
+const EXCEL_URL = "data/BI Operacional_Catering.xlsx";
+const EXCEL_SHEET = null;
 
 /* COLUNAS */
 const HEAD_ARM=["Unidade","Data","Volume In (tons)","Volume Out (tons)","Corte (KG)","Contagem cíclica","ILA %","IRA %","Paletes Pendentes","Perdas (avarias e diferença de estoque)"];
@@ -262,10 +240,7 @@ const HEAD_RH=["Unidade","Data","HE armazém e transporte","Turnover","Absenteí
 const HEAD_TRANSP=["Unidade","Data","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","% On-time (calc)","Volume (tons)","Ocupação","Reentrega","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Ocorrências quantidade D-1","Ocorrências em R$ D-1","Indisponibilidade de Frota (%)"];
 
 /* TIPAGEM/FORMATO */
-const pctCols=new Set([
-  "ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo",
-  "Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"
-]);
+const pctCols=new Set(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"]);
 const intCols=new Set(["Paletes Pendentes","Horas Extras Armazém","Horas Extras Transporte","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1"]);
 const moneyCols=new Set(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"]);
 const tonsCols=new Set(["Volume In (tons)","Volume Out (tons)","Volume (tons)"]);
@@ -287,19 +262,7 @@ const parseDateRaw = s=>{
   return new Date(s);
 };
 const asNumber=(v)=>{ if(v===null||v===undefined) return ''; const s=String(v).trim(); if(s===''||isDash(s)) return ''; const n=Number(s.replace(/R\$\s?/i,'').replace(/\./g,'').replace(',','.').replace(/%/g,'')); return Number.isFinite(n)?n:''; };
-/* CORRIGIDO: mês sem -1 no formato DD/MM/AAAA */
-const asDateISO=(v)=>{
-  if(v==null||v===''||isDash(v)) return '';
-  if(typeof v==='number'){
-    const d=XLSX.SSF.parse_date_code(v); if(!d) return '';
-    return toISODateLocal(d.y,d.m,d.d);
-  }
-  const s=String(v).trim();
-  const m=s.match(/^(\d{2})[./](\d{2})[./](\d{4})$/);
-  if(m) return toISODateLocal(+m[3],+m[2],+m[1]); // mês correto
-  const dt=new Date(s);
-  return isNaN(dt)?'':toISODateLocal(dt.getFullYear(),dt.getMonth()+1,dt.getDate());
-};
+const asDateISO=(v)=>{ if(v==null||v===''||isDash(v)) return ''; if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v); if(!d) return ''; return toISODateLocal(d.y,d.m,d.d);} const s=String(v).trim(); const m=s.match(/^(\d{2})[./](\d{2})[./](\d{4})$/); if(m) return toISODateLocal(+m[3],+m[2],+m[1]); const dt=new Date(s); return isNaN(dt)?'':toISODateLocal(dt.getFullYear(),dt.getMonth()+1,dt.getDate()); };
 
 /* Normalizador de % */
 function normPct(v){
@@ -316,8 +279,7 @@ function normPct(v){
 function getSeedData(){
   const el=document.getElementById('seed-data');
   if(!el) return [];
-  let raw=[];
-  try{ raw = JSON.parse(el.textContent||'[]'); }catch(e){ return []; }
+  let raw=[]; try{ raw = JSON.parse(el.textContent||'[]'); }catch(e){ return []; }
   if(!Array.isArray(raw) || !raw.length) return [];
   return raw.map(normalizeRow).filter(o=>!isRowAllBlank(o));
 }
@@ -330,7 +292,7 @@ const {dateStart,dateEnd,csvInput,btnMetas,modalMetas,closeMetas,btnSalvarMetas,
 /* UNIDADES */
 let UNIT_STATE=[];
 function renderUnits(list){
-  const units=Array.from(new Set(list.map(r=>r.Unidade))).filter(Boolean).sort();
+  const units=Array.from(new Set(list.map(r=>r.Unidade))).sort();
   const prev=new Map(UNIT_STATE.map(x=>[x.u,x.on]));
   UNIT_STATE=units.map(u=>({u,on:prev.has(u)?prev.get(u):true}));
   unitsBar.innerHTML='';
@@ -386,30 +348,16 @@ function summarize(list){
 const targetMap={"Contagem cíclica":{k:"contagem",inverse:false},"ILA %":{k:"ila",inverse:false},"IRA %":{k:"ira",inverse:false},"Perdas (avarias e diferença de estoque)":{k:"perdas",inverse:true},"Turnover":{k:"turnover",inverse:true},"Absenteísmo":{k:"abs",inverse:true},"Ocupação":{k:"ocupacao",inverse:false},"ON TIME D-1":{k:"onTime",inverse:false},"IN FULL D-1":{k:"inFull",inverse:false},"FILL RATE D-1":{k:"fillRate",inverse:false},"% On-time (calc)":{k:"onTime",inverse:false}};
 const getTargets=()=>{const raw=localStorage.getItem(LS_METAS);return raw?{...defaultTargets,...JSON.parse(raw)}:{...defaultTargets}};
 const saveTargets=t=>localStorage.setItem(LS_METAS,JSON.stringify(t));
-function statusOf(metric,value){
-  const t=getTargets(); const conf=targetMap[metric];
-  if(!conf) return 'neutral';
-  const target=Number(t[conf.k]);
-  if(isNaN(target) || value==null || value==='') return 'neutral';
-  if(!conf.inverse){
-    if(value>=target) return 'ok';
-    if(value>=target*0.95) return 'warn';
-    return 'bad';
-  } else {
-    if(value<=target) return 'ok';
-    if(value<=target*1.10) return 'warn';
-    return 'bad';
-  }
-}
+function statusOf(metric,value){ const t=getTargets(); const conf=targetMap[metric]; if(!conf) return 'neutral'; const target=Number(t[conf.k]); if(isNaN(target)||value==null||value==='') return 'neutral'; if(!conf.inverse){ if(value>=target) return 'ok'; if(value>=target*0.95) return 'warn'; return 'bad'; } else { if(value<=target) return 'ok'; if(value<=target*1.10) return 'warn'; return 'bad'; } }
 
-/* RENDER */
+/* RENDER CARDS/TABELAS */
 function renderBadges(){ const t=getTargets(); const items=[["On-time",t.onTime],["Fill Rate",t.fillRate],["In Full",t.inFull],["Contagem",t.contagem],["ILA",t.ila],["IRA",t.ira],["Perdas (máx)",t.perdas],["Ocupação",t.ocupacao],["Turnover (máx)",t.turnover],["Absenteísmo (máx)",t.abs]]; metasBadges.innerHTML=''; items.forEach(([k,v])=>{const s=document.createElement('span'); s.className='pill'; s.textContent=`${k}: ${v}%`; metasBadges.appendChild(s);}); }
 function cardHTML(label,value,type,metricKeyForStatus){
   let txt='';
   if(type==='money')      txt=fmt.money(value);
   else if(type==='pct')   txt=fmt.pct(value);
   else                    txt=fmt.num(value);
-  const st=metricKeyForStatus?statusOf(metricKeyForStatus, (value===''||value==null)?null:Number(value)):'neutral';
+  const st=metricKeyForStatus?statusOf(metricKeyForStatus,Number(value)):'neutral';
   const valueCls = `mt-1 text-lg font-semibold text-slate-900${type==='money' ? ' is-money' : ''}`;
   return `<div class="${st} rounded-2xl border border-[var(--borda)] shadow-sm p-3">
             <div class="flex items-center gap-2 text-[12px] text-slate-600">
@@ -422,43 +370,15 @@ function cardHTML(label,value,type,metricKeyForStatus){
 function renderCardsFor(block,sum){
   let cardsArr=[];
   if(block===ROUTES.arm){
-    cardsArr=[
-      ['Volume In(t)',sum.sum["Volume In (tons)"],'num',null],
-      ['Volume Out(t)',sum.sum["Volume Out (tons)"],'num',null],
-      ['Corte(KG)',sum.sum["Corte (KG)"],'num',null],
-      ['Contagem cíclica',sum.avg["Contagem cíclica"],'num',"Contagem cíclica"],
-      ['ILA %',sum.avg["ILA %"],'pct',"ILA %"],
-      ['IRA %',sum.avg["IRA %"],'pct',"IRA %"],
-      ['Paletes Pendentes',sum.sum["Paletes Pendentes"],'num',null],
-      ['Perdas (%)',sum.avg["Perdas (avarias e diferença de estoque)"],'pct',"Perdas (avarias e diferença de estoque)"]
-    ];
+    cardsArr=[['Volume In(t)',sum.sum["Volume In (tons)"],'num',null],['Volume Out(t)',sum.sum["Volume Out (tons)"],'num',null],['Corte(KG)',sum.sum["Corte (KG)"],'num',null],['Contagem cíclica',sum.avg["Contagem cíclica"],'num',"Contagem cíclica"],['ILA %',sum.avg["ILA %"],'pct',"ILA %"],['IRA %',sum.avg["IRA %"],'pct',"IRA %"],['Paletes Pendentes',sum.sum["Paletes Pendentes"],'num',null],['Perdas (%)',sum.avg["Perdas (avarias e diferença de estoque)"],'pct',"Perdas (avarias e diferença de estoque)"]];
   }else if(block===ROUTES.rh){
-    cardsArr=[
-      ['HE total',sum.sum["HE armazém e transporte"],'num',null],
-      ['Turnover %',sum.avg["Turnover"],'pct',"Turnover"],
-      ['Absenteísmo %',sum.avg["Absenteísmo"],'pct',"Absenteísmo"],
-      ['Custo MOT (R$)',sum.sum["Custo MOT (armazém e transporte)"],'money',null]
-    ];
+    cardsArr=[['HE total',sum.sum["HE armazém e transporte"],'num',null],['Turnover %',sum.avg["Turnover"],'pct',"Turnover"],['Absenteísmo %',sum.avg["Absenteísmo"],'pct',"Absenteísmo"],['Custo MOT (R$)',sum.sum["Custo MOT (armazém e transporte)"],'money',null]];
   }else{
-    cardsArr=[
-      ['Largada total',sum.sum["Largada (Total de veículos)"],'num',null],
-      ['No horário',sum.sum["Largada (Veículos que saíram no horario)"],'num',null],
-      ['% Largada',sum.avg["% On-time (calc)"],'pct',"% On-time (calc)"],
-      ['Volume (t)',sum.sum["Volume (tons)"],'num',null],
-      ['Ocupação %',sum.avg["Ocupação"],'pct',"Ocupação"],
-      ['Reentrega',sum.sum["Reentrega"],'num',null],
-      ['On time D-1%',sum.avg["ON TIME D-1"],'pct',"ON TIME D-1"],
-      ['In full D-1%',sum.avg["IN FULL D-1"],'pct',"IN FULL D-1"],
-      ['Fill rate D-1%',sum.avg["FILL RATE D-1"],'pct',"FILL RATE D-1"],
-      ['Indisp. Frota %',sum.avg["Indisponibilidade de Frota (%)"],'pct',null],
-      ['Ocorrências R$',sum.sum["Ocorrências em R$ D-1"],'money',null],
-      ['Ocorrências',sum.sum["Ocorrências quantidade D-1"],'num',null]
-    ];
+    cardsArr=[['Largada total',sum.sum["Largada (Total de veículos)"],'num',null],['No horário',sum.sum["Largada (Veículos que saíram no horario)"],'num',null],['% Largada',sum.avg["% On-time (calc)"],'pct',"% On-time (calc)"],['Volume (t)',sum.sum["Volume (tons)"],'num',null],['Ocupação %',sum.avg["Ocupação"],'pct',"Ocupação"],['Reentrega',sum.sum["Reentrega"],'num',null],['On time D-1%',sum.avg["ON TIME D-1"],'pct',"ON TIME D-1"],['In full D-1%',sum.avg["IN FULL D-1"],'pct',"IN FULL D-1"],['Fill rate D-1%',sum.avg["FILL RATE D-1"],'pct',"FILL RATE D-1"],['Indisp. Frota %',sum.avg["Indisponibilidade de Frota (%)"],'pct',null],['Ocorrências R$',sum.sum["Ocorrências em R$ D-1"],'money',null],['Ocorrências',sum.sum["Ocorrências quantidade D-1"],'num',null]];
   }
   cards.innerHTML=cardsArr.map(c=>cardHTML(c[0],c[1],c[2],c[3])).join('');
 }
 function renderHead(theadEl,HEADERS){ const tr=document.createElement('tr'); HEADERS.forEach((h,i)=>{const th=document.createElement('th'); th.className=(i===0?'col-unidade':i===1?'col-data':'col-num'); th.textContent=h; tr.appendChild(th);}); theadEl.innerHTML=''; theadEl.appendChild(tr); }
-/* CORRIGIDO: não converter '' para 0 ao calcular status */
 function renderBody(tbodyEl,HEADERS,list,rowsInfoEl){
   const frag=document.createDocumentFragment();
   list.forEach(r=>{
@@ -467,19 +387,10 @@ function renderBody(tbodyEl,HEADERS,list,rowsInfoEl){
       let v=r[h];
       if(h==="Data") v=fmt.date(v);
       if(h==="Volume (tons)"&&(v==null||v==='')){ const vin=asNumber(r["Volume In (tons)"])||0; const vout=asNumber(r["Volume Out (tons)"])||0; if(vin>0||vout>0) v=vin+vout; }
-      let txt='';
-      if(pctCols.has(h)) txt=fmt.pct(v);
-      else if(moneyCols.has(h)) txt=fmt.money(v);
-      else if(kgCols.has(h)||tonsCols.has(h)||intCols.has(h)) txt=fmt.num(v);
-      else txt=(v??'')+'';
-
-      const numVal = (v===''||v==null) ? null : Number(v);
-      const st=statusOf(h,numVal);
-
-      const td=document.createElement('td');
-      td.className=(st!=='neutral'?' '+st+' rounded-md border':'');
-      td.textContent=txt;
-      tr.appendChild(td);
+      let txt=''; if(pctCols.has(h)) txt=fmt.pct(v); else if(moneyCols.has(h)) txt=fmt.money(v);
+      else if(kgCols.has(h)||tonsCols.has(h)||intCols.has(h)) txt=fmt.num(v); else txt=(v??'')+'';
+      const st=statusOf(h,Number(v));
+      const td=document.createElement('td'); td.className=(st!=='neutral'?' '+st+' rounded-md border':''); td.textContent=txt; tr.appendChild(td);
     });
     frag.appendChild(tr);
   });
@@ -549,7 +460,7 @@ function openMetas(){const t=getTargets(); m_onTime.value=t.onTime; m_inFull.val
 function saveMetas(){ const t={onTime:+(m_onTime.value||defaultTargets.onTime),inFull:+(m_inFull.value||defaultTargets.inFull),fillRate:+(m_fillRate.value||defaultTargets.fillRate),contagem:+(m_contagem.value||defaultTargets.contagem),ila:+(m_ila.value||defaultTargets.ila),ira:+(m_ira.value||defaultTargets.ira),perdas:+(m_perdas.value||defaultTargets.perdas),ocupacao:+(m_ocupacao.value||defaultTargets.ocupacao),turnover:+(m_turnover.value||defaultTargets.turnover),abs:+(m_abs.value||defaultTargets.abs)}; saveTargets(t); renderBadges(); refresh(); modalMetas.close(); }
 
 /* Filtro por bloco */
-const hasAnyForHeaders=(row,HEADERS)=> HEADERS.slice(2).some(h=>{ const v=row[h]; if(v===''||v==null) return false; const n=Number(v); return Number.isFinite(n)?n!==0:String(v).trim()!==''; });
+const hasAnyForHeaders=(row,HEADERS)=> HEADERS.slice(2).some(h=>{ const v=row[h]; if(v===''||v==null) return false; const n=Number(v); return Number.isFinite(n)?true:String(v).trim()!==''; });
 
 /* HEADERS/TABELAS */
 function renderHeadsOnce(){ if(!theadArm.hasChildNodes()) renderHead(theadArm,HEAD_ARM); if(!theadRH.hasChildNodes()) renderHead(theadRH,HEAD_RH); if(!theadTransp.hasChildNodes()) renderHead(theadTransp,HEAD_TRANSP); }
@@ -563,125 +474,11 @@ function refresh(){
   if(activeBlock===ROUTES.arm) renderBody(tbodyArm,HEAD_ARM,filteredForBlock,rowsArm);
   else if(activeBlock===ROUTES.rh) renderBody(tbodyRH,HEAD_RH,filteredForBlock,rowsRH);
   else renderBody(tbodyTransp,HEAD_TRANSP,filteredForBlock,rowsTransp);
+  // farol re-render sempre que refresh
+  buildAndRenderFarol();
 }
 
-/* === NOVO: FAROL DE PREENCHIMENTO === */
-const FAROL_REQUIRED = {
-  arm: [
-    "Volume In (tons)","Volume Out (tons)","Corte (KG)","Contagem cíclica",
-    "ILA %","IRA %","Paletes Pendentes","Perdas (avarias e diferença de estoque)"
-  ],
-  rh: [
-    "HE armazém e transporte","Turnover","Absenteísmo","Custo MOT (armazém e transporte)"
-  ],
-  transp_today: [
-    "Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Ocupação"
-  ],
-  transp_prev: [
-    "Volume (tons)","Reentrega","ON TIME D-1","IN FULL D-1","FILL RATE D-1",
-    "Ocorrências quantidade D-1","Ocorrências em R$ D-1","Indisponibilidade de Frota (%)"
-  ]
-};
-function todayISO(){
-  const d = new Date();
-  return toISODateLocal(d.getFullYear(), d.getMonth()+1, d.getDate());
-}
-function yesterdayISO(){
-  const d = new Date(); d.setDate(d.getDate()-1);
-  return toISODateLocal(d.getFullYear(), d.getMonth()+1, d.getDate());
-}
-function isFilledValue(v){
-  if(v===0) return true;
-  return v!=='' && v!=null;
-}
-function rowsByUnitAndDate(unit, isoDate, rows){
-  return rows.filter(r => r.Unidade===unit && r.Data===isoDate);
-}
-function fieldFilledInRows(rows, field){
-  return rows.some(r => isFilledValue(r[field]));
-}
-function buildFarolForBlock(rows, units, block){
-  const tISO = todayISO();
-  const yISO = yesterdayISO();
-  let spec = [];
-  if(block==='transp'){
-    spec = FAROL_REQUIRED.transp_today.map(f => ({field:f, date:tISO}))
-      .concat(FAROL_REQUIRED.transp_prev.map(f => ({field:f, date:yISO})));
-  }else if(block==='arm'){
-    spec = FAROL_REQUIRED.arm.map(f => ({field:f, date:yISO}));
-  }else if(block==='rh'){
-    spec = FAROL_REQUIRED.rh.map(f => ({field:f, date:yISO}));
-  }
-  const out = units.map(u=>{
-    let present=0, total=spec.length;
-    const missing=[], partial=[];
-    spec.forEach(({field,date})=>{
-      const dayRows = rowsByUnitAndDate(u, date, rows);
-      const ok = dayRows.length>0 && fieldFilledInRows(dayRows, field);
-      if(ok){ present++; } else { missing.push(`${field} (${fmt.date(date)})`); }
-    });
-    const status = (present===0) ? 'red' : (present===total ? 'green' : 'amber');
-    if(status!=='green'){
-      const filled = spec
-        .filter(({field,date})=>{
-          const dayRows = rowsByUnitAndDate(u, date, rows);
-          return dayRows.length>0 && fieldFilledInRows(dayRows, field);
-        })
-        .map(({field,date})=>`${field} (${fmt.date(date)})`);
-      if(filled.length) partial.push(`Preenchidos: ${filled.join(', ')}`);
-    }
-    return { unidade:u, status, present, total, missing, partial };
-  });
-  return out;
-}
-function renderFarolTable(title, items){
-  const statusPill = (s)=>{
-    if(s==='green') return `<span class="farol-badge"><span class="dot dot-green"></span>Verde</span>`;
-    if(s==='amber') return `<span class="farol-badge"><span class="dot dot-amber"></span>Amarelo</span>`;
-    return `<span class="farol-badge"><span class="dot dot-red"></span>Vermelho</span>`;
-  };
-  const rows = items
-    .sort((a,b)=> a.status===b.status ? a.unidade.localeCompare(b.unidade) :
-      (a.status==='red'? -1 : a.status==='amber'? 0 : 1))
-    .map(it=>`
-      <tr>
-        <td class="font-semibold">${it.unidade}</td>
-        <td>${statusPill(it.status)}</td>
-        <td>${it.present}/${it.total}</td>
-        <td class="wrap-small">
-          ${it.missing.length ? `<div><strong>Faltando:</strong> ${it.missing.join(', ')}</div>` : '<span class="text-slate-500">—</span>'}
-          ${it.partial.length ? `<div class="mt-1 text-slate-600">${it.partial.join(' | ')}</div>` : ''}
-        </td>
-      </tr>
-    `).join('');
-  return `
-    <div>
-      <div class="block-title mb-1">${title}</div>
-      <table class="farol-table">
-        <thead>
-          <tr><th>Unidade</th><th>Status</th><th>Campos</th><th>Detalhes</th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
-}
-function openFarol(){
-  const rows = DATA.map(r=>({...r}));
-  const units = Array.from(new Set(rows.map(r=>r.Unidade))).filter(Boolean).sort();
-  const arm = buildFarolForBlock(rows, units, 'arm');
-  const rh  = buildFarolForBlock(rows, units, 'rh');
-  const tr  = buildFarolForBlock(rows, units, 'transp');
-  const html = [
-    renderFarolTable(`Armazém — referência ${fmt.date(yesterdayISO())}`, arm),
-    renderFarolTable(`RH — referência ${fmt.date(yesterdayISO())}`, rh),
-    renderFarolTable(`Transporte — hoje (${fmt.date(todayISO())}) + ontem (${fmt.date(yesterdayISO())})`, tr),
-  ].join('<hr class="my-3 border-[var(--borda)]"/>');
-  document.getElementById('farolContainer').innerHTML = html;
-  document.getElementById('modalFarol').showModal();
-}
-
-/* === NOVO: carregar Excel do repositório no boot === */
+/* === Carregar Excel estático no boot === */
 async function loadExcelFromRepo(){
   try{
     const res = await fetch(EXCEL_URL, {cache:"no-store"});
@@ -691,7 +488,6 @@ async function loadExcelFromRepo(){
     const ws = wb.Sheets[EXCEL_SHEET] || wb.Sheets[wb.SheetNames[0]];
     if(!ws) throw new Error(`Aba não encontrada: ${EXCEL_SHEET||'(primeira aba)'}`);
 
-    // Recorte igual ao seu upload: cabeçalho na linha 3 e começa na coluna B
     const ref = XLSX.utils.decode_range(ws['!ref']);
     ref.s.r = Math.max(ref.s.r, 2);  // linha 3 (0-based)
     ref.s.c = Math.max(ref.s.c, 1);  // coluna B (0-based)
@@ -704,11 +500,10 @@ async function loadExcelFromRepo(){
     console.log('CARREGADO_DO_REPO:', {linhas: DATA.length, aba: (EXCEL_SHEET||wb.SheetNames[0])});
   }catch(err){
     console.warn("Falha ao carregar Excel do repositório:", err);
-    // Mantém DATA como está (pode vir do seed-data) e o usuário ainda pode usar o botão de upload manual se quiser
   }
 }
 
-/* Inicialização UI (datas, abas, unidades) */
+/* Inicialização */
 function bootstrap(){
   const hasData = Array.isArray(DATA) && DATA.length>0;
   const afterDataReady = ()=>{
@@ -718,14 +513,9 @@ function bootstrap(){
     if(!isNaN(minD)) dateStart.value=toISODateLocal(minD.getFullYear(),minD.getMonth()+1,minD.getDate());
     if(!isNaN(maxD)) dateEnd.value=toISODateLocal(maxD.getFullYear(),maxD.getMonth()+1,maxD.getDate());
     setActiveBlock(getActiveFromHash()); if(!location.hash) history.replaceState(null,'','#'+activeBlock);
+    buildAndRenderFarol();
   };
-
-  if(hasData){
-    afterDataReady();
-  }else{
-    // tenta Excel estático do repositório
-    loadExcelFromRepo().then(afterDataReady);
-  }
+  if(hasData){ afterDataReady(); } else { loadExcelFromRepo().then(afterDataReady); }
 }
 
 /* EVENTOS */
@@ -735,12 +525,9 @@ btnReset.addEventListener('click',()=>{ dateStart.value=''; dateEnd.value=''; UN
 btnMetas.addEventListener('click',openMetas);
 closeMetas.addEventListener('click',e=>{e.preventDefault();modalMetas.close();});
 btnSalvarMetas.addEventListener('click',e=>{e.preventDefault();saveMetas();});
+modalMetas.addEventListener('cancel',()=>modalMetas.close());
 
-/* NOVO: eventos Farol */
-document.getElementById('btnFarol')?.addEventListener('click', openFarol);
-document.getElementById('btnFecharFarol')?.addEventListener('click', ()=>document.getElementById('modalFarol').close());
-
-/* IMPORTAÇÃO MANUAL (fallback opcional) */
+/* IMPORTAÇÃO MANUAL */
 csvInput.addEventListener('change',async e=>{
   const f=e.target.files?.[0]; if(!f) return;
   if(/\.(xlsx|xls)$/i.test(f.name)){
@@ -776,17 +563,124 @@ bootstrap();
   window.addEventListener('resize',()=>{ cancelAnimationFrame(rafId); rafId=requestAnimationFrame(fit); });
   requestAnimationFrame(fit);
 })();
+
+/* ============ FAROL DE PREENCHIMENTO ============ */
+/** Campos por bloco e data-referência */
+const FAROL_FIELDS = {
+  ARM_D1: ["Volume In (tons)","Volume Out (tons)","Corte (KG)","Contagem cíclica","ILA %","IRA %","Paletes Pendentes","Perdas (avarias e diferença de estoque)"],
+  RH_D1: ["HE armazém e transporte","Turnover","Absenteísmo","Custo MOT (armazém e transporte)"],
+  TRANS_D: ["Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Ocupação"],
+  TRANS_D1: ["ON TIME D-1","IN FULL D-1","FILL RATE D-1","Ocorrências quantidade D-1","Ocorrências em R$ D-1"],
+};
+
+/** Retorna D (hoje) e D-1 (com exceção de segunda) em ISO yyyy-mm-dd */
+function getAnchorDates(today=new Date()){
+  const D = new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  const dow = D.getDay(); // 0=dom 1=seg ... 6=sab
+  const D1 = new Date(D);
+  if(dow===1){ D1.setDate(D.getDate()-3); } else { D1.setDate(D.getDate()-1); }
+  const toISO=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return {D_iso:toISO(D), D1_iso:toISO(D1)};
+}
+
+/** Mescla linhas da mesma unidade+data, pegando o primeiro valor não vazio para cada campo (0 é válido) */
+function mergeFirstNonEmpty(rows, fields){
+  const out={};
+  fields.forEach(f=>out[f]='');
+  for(const r of rows){
+    for(const f of fields){
+      if(out[f]==='' && (r[f]!=='' && r[f]!==null && r[f]!==undefined)) out[f]=r[f];
+    }
+  }
+  return out;
+}
+
+/** Retorna 'ok' | 'partial' | 'missing' para unidade+data+campos */
+function statusFor(unit, isoDate, fields){
+  const rows = DATA.filter(r=>r.Unidade===unit && r.Data===isoDate);
+  if(!rows.length) return 'missing';
+  const merged = mergeFirstNonEmpty(rows, fields);
+  const vals = fields.map(f=>merged[f]);
+  const hasAny = vals.some(v=>v!=='' && v!==null && v!==undefined);
+  if(!hasAny) return 'missing';
+  const allHas = vals.every(v=>v!=='' && v!==null && v!==undefined);
+  return allHas ? 'ok' : 'partial';
+}
+
+/** Monta e desenha a tabela do Farol (chamar após refresh/dados) */
+function buildAndRenderFarol(){
+  const {D_iso,D1_iso} = getAnchorDates(new Date());
+  const units = Array.from(new Set(applyFilters(DATA).map(r=>r.Unidade))).sort();
+  const rows = units.map(u=>{
+    return {
+      unidade:u,
+      arm: statusFor(u,D1_iso,FAROL_FIELDS.ARM_D1),
+      rh:  statusFor(u,D1_iso,FAROL_FIELDS.RH_D1),
+      td:  statusFor(u,D_iso,FAROL_FIELDS.TRANS_D),
+      td1: statusFor(u,D1_iso,FAROL_FIELDS.TRANS_D1),
+    };
+  });
+  renderFarol(rows, D_iso, D1_iso);
+}
+
+/** Render do Farol (modal) */
+function renderFarol(data, D_iso, D1_iso){
+  const body = document.getElementById('farolBody');
+  const info = document.getElementById('farolHeaderInfo');
+  info.textContent = `D = ${fmt.date(D_iso)} | D-1 = ${fmt.date(D1_iso)} | Unidades: ${data.length}`;
+
+  function dot(c){ const map={ok:'g',partial:'y',missing:'r'}; return `<span class="dot ${map[c]||'r'}"></span>`; }
+  function rowHTML(r){
+    return `<tr>
+      <td class="font-medium text-[13px]">${r.unidade}</td>
+      <td><div class="cell-dot">${dot(r.arm)}</div></td>
+      <td><div class="cell-dot">${dot(r.rh)}</div></td>
+      <td><div class="cell-dot">${dot(r.td)}</div></td>
+      <td><div class="cell-dot">${dot(r.td1)}</div></td>
+    </tr>`;
+  }
+
+  const filterEl = document.getElementById('farolFilter');
+  const onlyMissingEl = document.getElementById('farolOnlyMissing');
+
+  function applyView(){
+    const q = (filterEl.value||'').trim().toLowerCase();
+    const onlyMissing = !!onlyMissingEl.checked;
+    let list = data.slice();
+    if(q) list = list.filter(r => r.unidade.toLowerCase().includes(q));
+    if(onlyMissing) list = list.filter(r => !(r.arm==='ok' && r.rh==='ok' && r.td==='ok' && r.td1==='ok'));
+    body.innerHTML = list.length? list.map(rowHTML).join('') : `<tr><td colspan="5" class="text-center text-slate-500 py-4">Sem dados</td></tr>`;
+  }
+  filterEl.oninput = applyView;
+  onlyMissingEl.onchange = applyView;
+  applyView();
+
+  // imprimir/copiar
+  document.getElementById('btnFarolPrint').onclick = ()=>{
+    window.print();
+  }
+}
+
+/* Botão flutuante para abrir/fechar Farol */
+(function(){
+  const btn = document.createElement('button');
+  btn.className='fab'; btn.id='btnFarol'; btn.textContent='Ver Farol';
+  document.body.appendChild(btn);
+  const modalFarol = document.getElementById('modalFarol');
+  btn.addEventListener('click',()=> modalFarol.showModal());
+  document.getElementById('btnCloseFarol').addEventListener('click',()=> modalFarol.close());
+  modalFarol.addEventListener('cancel',()=> modalFarol.close());
+})();
 </script>
 
-<!-- === INSIGHT ENGINE (colar antes de </body>) === -->
+<!-- === INSIGHT ENGINE (inalterado) === -->
 <style>
-  .insights-fab{position:fixed;right:18px;bottom:18px;z-index:9999;padding:.9rem 1.1rem;border-radius:999px;border:1px solid #cfe0ff;background:#0b3a8a;color:#fff;font-weight:600;box-shadow:0 8px 20px rgba(0,0,0,.18);cursor:pointer}
-  .insights-panel{position:fixed;right:18px;bottom:86px;z-index:9999;width:min(720px,92vw);max-height:75vh;overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 20px 40px rgba(2,6,23,.18)}
+  .insights-fab{position:fixed;right:18px;bottom:86px;z-index:9998;padding:.9rem 1.1rem;border-radius:999px;border:1px solid #cfe0ff;background:#0b3a8a;color:#fff;font-weight:600;box-shadow:0 8px 20px rgba(0,0,0,.18);cursor:pointer}
+  .insights-panel{position:fixed;right:18px;bottom:154px;z-index:9998;width:min(720px,92vw);max-height:75vh;overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 20px 40px rgba(2,6,23,.18)}
   .insights-panel header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #eef2ff;background:linear-gradient(90deg,#0b3a8a,#1673ff);color:#fff;border-top-left-radius:16px;border-top-right-radius:16px}
   .insights-panel section{padding:14px 16px}
   .chip{display:inline-flex;align-items:center;gap:6px;padding:.18rem .5rem;border-radius:999px;border:1px solid #e5e7eb;font-size:12px;background:#f8fafc;color:#0f172a}
-  /* ESCOPADO: evita colidir com .ok/.warn/.bad dos cards */
-  .insights-panel .ok{color:#065f46} .insights-panel .warn{color:#92400e} .insights-panel .bad{color:#991b1b}
+  .ok{color:#065f46} .warn{color:#92400e} .bad{color:#991b1b}
   .list{margin:8px 0 0 0;padding-left:16px}
   .list li{margin:4px 0}
   .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;background:#f3f4f6;border:1px solid #e5e7eb;border-bottom-width:2px;padding:.05rem .35rem;border-radius:6px}
@@ -805,185 +699,37 @@ bootstrap();
 
 <script>
 (()=>{
-const THRESH = {
-  ONTIME_OK:95, ONTIME_CRIT:90,
-  INFULL_OK:95, INFULL_CRIT:90,
-  FILL_OK:98, FILL_CRIT:95,
-  ILA_OK:100, IRA_OK:100,
-  PERDAS_WARN:0.3, PERDAS_CRIT:1.0,
-  OCUP_OK_MIN:85, OCUP_OK_MAX:95,
-  TURNOVER_WARN:5, TURNOVER_CRIT:10,
-  ABSENT_WARN:3, ABSENT_CRIT:5
-};
-
+const THRESH = {ONTIME_OK:95, ONTIME_CRIT:90, INFULL_OK:95, INFULL_CRIT:90, FILL_OK:98, FILL_CRIT:95, ILA_OK:100, IRA_OK:100, PERDAS_WARN:0.3, PERDAS_CRIT:1.0, OCUP_OK_MIN:85, OCUP_OK_MAX:95, TURNOVER_WARN:5, TURNOVER_CRIT:10, ABSENT_WARN:3, ABSENT_CRIT:5};
 const pct = v => (v!=null && !Number.isNaN(v)) ? `${v.toFixed(2)}%` : "—";
-function toNum(s){
-  if(!s) return NaN;
-  const m = String(s).replace(/\s/g,'').match(/-?\d+(?:[\.,]\d+)?/);
-  if(!m) return NaN;
-  return parseFloat(m[0].replace('.','').replace(',','.'));
-}
-function findClosestPercentage(el){
-  const text = (el.innerText||"") + " " + ([...el.querySelectorAll('*')].map(e=>e.innerText).join(' ')||"");
-  let m = text.match(/-?\d{1,3}(?:[\.,]\d+)?\s*%/);
-  if(m) return toNum(m[0]);
-  m = text.match(/-?\d{1,3}(?:[\.,]\d+)?/);
-  if(m) return toNum(m[0]);
-  return NaN;
-}
-
-const LABELS = [
-  {key:'onTime', re:/(on[\s-]?time|ontime)/i},
-  {key:'inFull', re:/(in\s*full|infull|if\b)/i},
-  {key:'fillRate', re:/(fill\s*rate|fillrate|fr\b)/i},
-  {key:'ila', re:/\bila\b/i},
-  {key:'ira', re:/\bira\b/i},
-  {key:'perdas', re:/(perdas|avarias|diferen[çc]a\s*de\s*estoque)/i},
-  {key:'ocupacao', re:/(ocupa[cç][aã]o|ocupacao)/i},
-  {key:'turnover', re:/turnover/i},
-  {key:'absenteismo', re:/(absent(e[i]s)?[ií]smo|absenteismo)/i},
-];
-
-function collectKPIsFromDataAttrs(){
-  const out = {};
-  document.querySelectorAll('[data-kpi]').forEach(el=>{
-    const key = String(el.getAttribute('data-kpi')||'').trim();
-    let v = el.getAttribute('data-value');
-    v = v!=null ? toNum(v) : findClosestPercentage(el);
-    if(!Number.isNaN(v)) out[key]=v;
-  });
-  return out;
-}
-function collectKPIsFromLabels(){
-  const out = {};
-  const all = [...document.querySelectorAll('body *')]
-    .filter(el=>el.children.length===0 && (el.innerText||'').trim().length>0);
-  LABELS.forEach(({key,re})=>{
-    let best = null, bestDist = Infinity;
-    all.forEach(el=>{
-      if(re.test(el.innerText)){
-        const v = findClosestPercentage(el);
-        if(!Number.isNaN(v)){
-          const d = 0;
-          if(d<bestDist){best={el,v};bestDist=d;}
-        }else{
-          const sibs = [...(el.parentElement?.children||[])];
-          for(const s of sibs){
-            const vv = findClosestPercentage(s);
-            if(!Number.isNaN(vv)){
-              const d = 1;
-              if(d<bestDist){best={el:s,v:vv};bestDist=d;}
-            }
-          }
-        }
-      }
-    });
-    if(best && !Number.isNaN(best.v)) out[key]=best.v;
-  });
-  return out;
-}
-
+function toNum(s){ if(!s) return NaN; const m=String(s).replace(/\s/g,'').match(/-?\d+(?:[\.,]\d+)?/); if(!m) return NaN; return parseFloat(m[0].replace('.','').replace(',','.')); }
+function findClosestPercentage(el){ const text=(el.innerText||"")+" "+([...el.querySelectorAll('*')].map(e=>e.innerText).join(' ')||""); let m=text.match(/-?\d{1,3}(?:[\.,]\d+)?\s*%/); if(m) return toNum(m[0]); m=text.match(/-?\d{1,3}(?:[\.,]\d+)?/); if(m) return toNum(m[0]); return NaN; }
+const LABELS=[{key:'onTime',re:/(on[\s-]?time|ontime)/i},{key:'inFull',re:/(in\s*full|infull|if\b)/i},{key:'fillRate',re:/(fill\s*rate|fillrate|fr\b)/i},{key:'ila',re:/\bila\b/i},{key:'ira',re:/\bira\b/i},{key:'perdas',re:/(perdas|avarias|diferen[çc]a\s*de\s*estoque)/i},{key:'ocupacao',re:/(ocupa[cç][aã]o|ocupacao)/i},{key:'turnover',re:/turnover/i},{key:'absenteismo',re:/(absent(e[i]s)?[ií]smo|absenteismo)/i},];
+function collectKPIsFromDataAttrs(){ const out={}; document.querySelectorAll('[data-kpi]').forEach(el=>{ const key=String(el.getAttribute('data-kpi')||'').trim(); let v=el.getAttribute('data-value'); v=v!=null?toNum(v):findClosestPercentage(el); if(!Number.isNaN(v)) out[key]=v; }); return out; }
+function collectKPIsFromLabels(){ const out={}; const all=[...document.querySelectorAll('body *')].filter(el=>el.children.length===0&&(el.innerText||'').trim().length>0); LABELS.forEach(({key,re})=>{ let best=null,bestDist=Infinity; all.forEach(el=>{ if(re.test(el.innerText)){ const v=findClosestPercentage(el); if(!Number.isNaN(v)){ const d=0; if(d<bestDist){best={el,v};bestDist=d;} }else{ const sibs=[...(el.parentElement?.children||[])]; for(const s of sibs){ const vv=findClosestPercentage(s); if(!Number.isNaN(vv)){ const d=1; if(d<bestDist){best={el:s,v:vv};bestDist=d;} } } } } }); if(best && !Number.isNaN(best.v)) out[key]=best.v; }); return out; }
 function mergePriority(a,b){ return {...a, ...b}; }
-function getKPIs(){
-  const byAttrs  = collectKPIsFromDataAttrs();
-  const byLabels = collectKPIsFromLabels();
-  return mergePriority(byLabels, byAttrs);
+function getKPIs(){ const byAttrs  = collectKPIsFromDataAttrs(); const byLabels = collectKPIsFromLabels(); return mergePriority(byLabels, byAttrs); }
+function analyze(k){ const good=[],warn=[],bad=[],suggest=[]; const push=(arr,msg)=>arr.push(msg);
+  const o=k.onTime; if(!Number.isNaN(o)){ if(o>=THRESH.ONTIME_OK) push(good,`On-time ${pct(o)} dentro/above da meta (≥ ${THRESH.ONTIME_OK}%).`); else if(o>=THRESH.ONTIME_CRIT){ push(warn,`On-time ${pct(o)} abaixo da meta. Meta: ${THRESH.ONTIME_OK}%.`); suggest.push(`Revisar causas de atraso (janela de corte, carga/descarga, rotas).`);} else{ push(bad,`On-time crítico em ${pct(o)} (< ${THRESH.ONTIME_CRIT}%).`); suggest.push(`Plano de ação imediato para atrasos recorrentes e gargalos.`);} }
+  const inf=k.inFull; if(!Number.isNaN(inf)){ if(inf>=THRESH.INFULL_OK) push(good,`In-Full ${pct(inf)} saudável (≥ ${THRESH.INFULL_OK}%).`); else if(inf>=THRESH.INFULL_CRIT){ push(warn,`In-Full ${pct(inf)} pede atenção.`); suggest.push(`Checar rupturas/picking incompleto e acurácia de estoque.`);} else{ push(bad,`In-Full crítico em ${pct(inf)}.`); suggest.push(`Ação em causas-raiz: planejamento, estoque de segurança, SLA fornecedores.`);} }
+  const fr=k.fillRate; if(!Number.isNaN(fr)){ if(fr>=THRESH.FILL_OK) push(good,`Fill Rate ${pct(fr)} excelente (≥ ${THRESH.FILL_OK}%).`); else if(fr>=THRESH.FILL_CRIT){ push(warn,`Fill Rate ${pct(fr)} abaixo do ideal.`); suggest.push(`Ajustar políticas de reposição e priorização de pedidos.`);} else{ push(bad,`Fill Rate ${pct(fr)} muito baixo.`); suggest.push(`Rever forecast e alinhamento comercial/logística.`);} }
+  const ila=k.ila; if(!Number.isNaN(ila)){ if(ila>=THRESH.ILA_OK) push(good,`ILA ${pct(ila)} ok (alvo 100%).`); else{ push(warn,`ILA ${pct(ila)} abaixo de 100%.`); suggest.push(`Corrigir lançamentos/processos que afetam disponibilidade.`);} }
+  const ira=k.ira; if(!Number.isNaN(ira)){ if(ira>=THRESH.IRA_OK) push(good,`IRA ${pct(ira)} ok (alvo 100%).`); else{ push(warn,`IRA ${pct(ira)} abaixo de 100%.`); suggest.push(`Atuar em recebimento, conferência e integridade dos itens.`);} }
+  const perdas=k.perdas; if(!Number.isNaN(perdas)){ if(perdas<=THRESH.PERDAS_WARN) push(good,`Perdas ${pct(perdas)} controladas (≤ ${THRESH.PERDAS_WARN}%).`); else if(perdas<=THRESH.PERDAS_CRIT){ push(warn,`Perdas ${pct(perdas)} elevadas.`); suggest.push(`Foco em causas (avarias, validade, diferença de estoque).`);} else{ push(bad,`Perdas ${pct(perdas)} críticas.`); suggest.push(`Ação corretiva urgente (embalagem, manuseio, inventário).`);} }
+  const oc=k.ocupacao; if(!Number.isNaN(oc)){ if(oc>=THRESH.OCUP_OK_MIN && oc<=THRESH.OCUP_OK_MAX) push(good,`Ocupação ${pct(oc)} saudável (${THRESH.OCUP_OK_MIN}–${THRESH.OCUP_OK_MAX}%).`); else if(oc>THRESH.OCUP_OK_MAX){ push(warn,`Ocupação ${pct(oc)} alta (risco de overflow).`); suggest.push(`Planejar ressuprimento/saídas e realocação de posições.`);} else{ push(warn,`Ocupação ${pct(oc)} baixa (subutilização).`); suggest.push(`Ajustar mix/entrada de clientes e uso de área.`);} }
+  const t=k.turnover; if(!Number.isNaN(t)){ if(t<=THRESH.TURNOVER_WARN) push(good,`Turnover ${pct(t)} sob controle (≤ ${THRESH.TURNOVER_WARN}%).`); else if(t<=THRESH.TURNOVER_CRIT){ push(warn,`Turnover ${pct(t)} pede atenção.`); suggest.push(`Reter talentos críticos e reforçar treinamento.`);} else{ push(bad,`Turnover ${pct(t)} muito alto.`); suggest.push(`Plano de retenção e revisão de escalas/benefícios.`);} }
+  const ab=k.absenteismo; if(!Number.isNaN(ab)){ if(ab<=THRESH.ABSENT_WARN) push(good,`Absenteísmo ${pct(ab)} ok (≤ ${THRESH.ABSENT_WARN}%).`); else if(ab<=THRESH.ABSENT_CRIT){ push(warn,`Absenteísmo ${pct(ab)} elevado.`); suggest.push(`Acompanhar faltas reincidentes e cobertura de turnos.`);} else{ push(bad,`Absenteísmo ${pct(ab)} crítico.`); suggest.push(`Ação imediata em clima, transporte e saúde ocupacional.`);} }
+  return {good,warn,bad,suggest};
 }
-
-function analyze(k){
-  const good=[], warn=[], bad=[], suggest=[];
-  const push = (arr,msg)=>arr.push(msg);
-
-  const o = k.onTime; if(!Number.isNaN(o)){
-    if(o>=THRESH.ONTIME_OK) push(good, `On-time ${pct(o)} dentro/above da meta (≥ ${THRESH.ONTIME_OK}%).`);
-    else if(o>=THRESH.ONTIME_CRIT) { push(warn, `On-time ${pct(o)} abaixo da meta. Meta: ${THRESH.ONTIME_OK}%.`); suggest.push(`Revisar causas de atraso (janela de corte, carga/descarga, rotas).`); }
-    else { push(bad, `On-time crítico em ${pct(o)} (< ${THRESH.ONTIME_CRIT}%).`); suggest.push(`Plano de ação imediato para atrasos recorrentes e gargalos.`); }
-  }
-  const inf = k.inFull; if(!Number.isNaN(inf)){
-    if(inf>=THRESH.INFULL_OK) push(good, `In-Full ${pct(inf)} saudável (≥ ${THRESH.INFULL_OK}%).`);
-    else if(inf>=THRESH.INFULL_CRIT){ push(warn, `In-Full ${pct(inf)} pede atenção.`); suggest.push(`Checar rupturas/picking incompleto e acurácia de estoque.`); }
-    else { push(bad, `In-Full crítico em ${pct(inf)}.`); suggest.push(`Ação em causas-raiz: planejamento, estoque de segurança, SLA fornecedores.`); }
-  }
-  const fr = k.fillRate; if(!Number.isNaN(fr)){
-    if(fr>=THRESH.FILL_OK) push(good, `Fill Rate ${pct(fr)} excelente (≥ ${THRESH.FILL_OK}%).`);
-    else if(fr>=THRESH.FILL_CRIT){ push(warn, `Fill Rate ${pct(fr)} abaixo do ideal.`); suggest.push(`Ajustar políticas de reposição e priorização de pedidos.`); }
-    else { push(bad, `Fill Rate ${pct(fr)} muito baixo.`); suggest.push(`Rever forecast e alinhamento comercial/logística.`); }
-  }
-  const ila = k.ila; if(!Number.isNaN(ila)){
-    if(ila>=THRESH.ILA_OK) push(good, `ILA ${pct(ila)} ok (alvo 100%).`);
-    else { push(warn, `ILA ${pct(ila)} abaixo de 100%.`); suggest.push(`Corrigir lançamentos/processos que afetam disponibilidade.`); }
-  }
-  const ira = k.ira; if(!Number.isNaN(ira)){
-    if(ira>=THRESH.IRA_OK) push(good, `IRA ${pct(ira)} ok (alvo 100%).`);
-    else { push(warn, `IRA ${pct(ira)} abaixo de 100%.`); suggest.push(`Atuar em recebimento, conferência e integridade dos itens.`); }
-  }
-  const perdas = k.perdas; if(!Number.isNaN(perdas)){
-    if(perdas<=THRESH.PERDAS_WARN) push(good, `Perdas ${pct(perdas)} controladas (≤ ${THRESH.PERDAS_WARN}%).`);
-    else if(perdas<=THRESH.PERDAS_CRIT) { push(warn, `Perdas ${pct(perdas)} elevadas.`); suggest.push(`Foco em causas (avarias, validade, diferença de estoque).`); }
-    else { push(bad, `Perdas ${pct(perdas)} críticas.`); suggest.push(`Ação corretiva urgente (embalagem, manuseio, inventário).`); }
-  }
-  const oc = k.ocupacao; if(!Number.isNaN(oc)){
-    if(oc>=THRESH.OCUP_OK_MIN && oc<=THRESH.OCUP_OK_MAX) push(good, `Ocupação ${pct(oc)} saudável (${THRESH.OCUP_OK_MIN}–${THRESH.OCUP_OK_MAX}%).`);
-    else if(oc>THRESH.OCUP_OK_MAX){ push(warn, `Ocupação ${pct(oc)} alta (risco de overflow).`); suggest.push(`Planejar ressuprimento/saídas e realocação de posições.`); }
-    else { push(warn, `Ocupação ${pct(oc)} baixa (subutilização).`); suggest.push(`Ajustar mix/entrada de clientes e uso de área.`); }
-  }
-  const t = k.turnover; if(!Number.isNaN(t)){
-    if(t<=THRESH.TURNOVER_WARN) push(good, `Turnover ${pct(t)} sob controle (≤ ${THRESH.TURNOVER_WARN}%).`);
-    else if(t<=THRESH.TURNOVER_CRIT){ push(warn, `Turnover ${pct(t)} pede atenção.`); suggest.push(`Reter talentos críticos e reforçar treinamento.`); }
-    else { push(bad, `Turnover ${pct(t)} muito alto.`); suggest.push(`Plano de retenção e revisão de escalas/benefícios.`); }
-  }
-  const ab = k.absenteismo; if(!Number.isNaN(ab)){
-    if(ab<=THRESH.ABSENT_WARN) push(good, `Absenteísmo ${pct(ab)} ok (≤ ${THRESH.ABSENT_WARN}%).`);
-    else if(ab<=THRESH.ABSENT_CRIT){ push(warn, `Absenteísmo ${pct(ab)} elevado.`); suggest.push(`Acompanhar faltas reincidentes e cobertura de turnos.`); }
-    else { push(bad, `Absenteísmo ${pct(ab)} crítico.`); suggest.push(`Ação imediata em clima, transporte e saúde ocupacional.`); }
-  }
-
-  return {good, warn, bad, suggest};
-}
-
 function renderInsights(res){
-  const root = document.getElementById('insightsContent');
-  const sect = (title, cls, arr)=> arr.length? `
-    <h3 class="${cls}" style="margin:.4rem 0 .2rem 0;font-weight:700">${title}</h3>
-    <ul class="list">${arr.map(x=>`<li>${x}</li>`).join('')}</ul>
-  ` : '';
-  root.innerHTML = `
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.5rem">
-      <span class="chip">Leituras automáticas da tela</span>
-      <span class="chip">Sem envio de dados</span>
-      <span class="chip">Ajuste os limiares no script</span>
-    </div>
-    ${sect('✔︎ O que está bom', 'ok', res.good)}
-    ${sect('⚠︎ Pontos de atenção', 'warn', res.warn)}
-    ${sect('⛔ Riscos / críticos', 'bad', res.bad)}
-    ${sect('💡 Sugestões', '', res.suggest)}
-    <div style="margin-top:.8rem;font-size:12px;color:#475569">
-      Dica: para leituras 100% precisas, adicione <span class="kbd">data-kpi</span> e <span class="kbd">data-value</span> nos cards (ex.: <span class="kbd">&lt;div data-kpi="onTime" data-value="94.2"&gt;</span>).
-    </div>
-  `;
+  const root=document.getElementById('insightsContent');
+  const sect=(title,cls,arr)=>arr.length?`<h3 class="${cls}" style="margin:.4rem 0 .2rem 0;font-weight:700">${title}</h3><ul class="list">${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`:'';
+  root.innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.5rem"><span class="chip">Leituras automáticas da tela</span><span class="chip">Sem envio de dados</span><span class="chip">Ajuste os limiares no script</span></div>${sect('✔︎ O que está bom','ok',res.good)}${sect('⚠︎ Pontos de atenção','warn',res.warn)}${sect('⛔ Riscos / críticos','bad',res.bad)}${sect('💡 Sugestões','',res.suggest)}<div style="margin-top:.8rem;font-size:12px;color:#475569">Dica: para leituras 100% precisas, adicione <span class="kbd">data-kpi</span> e <span class="kbd">data-value</span> nos cards.</div>`;
 }
-
-const btn = document.getElementById('btnInsights');
-const panel = document.getElementById('panelInsights');
-const closeBtn = document.getElementById('closeInsights');
-
-async function runAnalysis(){
-  const kpis = getKPIs();
-  const res = analyze(kpis);
-  renderInsights(res);
-}
-
-btn.addEventListener('click', ()=>{
-  panel.style.display = panel.style.display==='none' ? 'block' : 'none';
-  if(panel.style.display==='block') runAnalysis();
-});
-closeBtn.addEventListener('click', ()=> panel.style.display='none');
-
-document.addEventListener('keydown', (e)=>{
-  if(e.altKey && (e.key==='i' || e.key==='I')) {
-    btn.click();
-  }
-});
+const btn=document.getElementById('btnInsights'); const panel=document.getElementById('panelInsights'); const closeBtn=document.getElementById('closeInsights');
+async function runAnalysis(){ const kpis=getKPIs(); const res=analyze(kpis); renderInsights(res); }
+btn.addEventListener('click',()=>{ panel.style.display=panel.style.display==='none'?'block':'none'; if(panel.style.display==='block') runAnalysis();});
+closeBtn.addEventListener('click',()=> panel.style.display='none');
+document.addEventListener('keydown',(e)=>{ if(e.altKey && (e.key==='i'||e.key==='I')) btn.click();});
 })();
 </script>
 <!-- === /INSIGHT ENGINE === -->
