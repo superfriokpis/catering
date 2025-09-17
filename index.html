@@ -485,6 +485,14 @@ const parseDateRaw = s=>{
 const asNumber=(v)=>{ if(v===null||v===undefined) return ''; const s=String(v).trim(); if(s===''||isDash(s)) return ''; const n=Number(s.replace(/R\$\s?/i,'').replace(/\./g,'').replace(',','.').replace(/%/g,'')); return Number.isFinite(n)?n:''; };
 const asDateISO=(v)=>{ if(v==null||v===''||isDash(v)) return ''; if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v); if(!d) return ''; return toISODateLocal(d.y,d.m,d.d);} const s=String(v).trim(); const m=s.match(/^(\d{2})[./](\d{2})[./](\d{4})$/); if(m) return toISODateLocal(+m[3],+m[2],+m[1]); const dt=new Date(s); return isNaN(dt)?'':toISODateLocal(dt.getFullYear(),dt.getMonth()+1,dt.getDate()); };
 
+/* ✅ Default dates: início = ontem (D-1), fim = hoje */
+function setDatesDefaultToYesterday(){
+  const today = new Date();
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  dateStart.value = toISODateLocal(yesterday.getFullYear(), yesterday.getMonth()+1, yesterday.getDate());
+  dateEnd.value   = toISODateLocal(today.getFullYear(), today.getMonth()+1, today.getDate());
+}
+
 function normPct(v){
   if(v===''||v==null) return '';
   let n=Number(String(v).replace('%','').replace(/\s/g,'').replace(',','.'));
@@ -685,7 +693,7 @@ function parseCSV(text){
     Object.keys(obj).forEach(k=>{
       if(PCT.has(k)) { obj[k]=normPct(obj[k]); return; }
       if(MONEY.has(k) || INTLIKE.has(k) || TONS.has(k)) { const n=asNumber(obj[k]); obj[k]=(n===''||!Number.isFinite(n))?'':n; }
-      if(k==="Contagem cíclica"){ const n=asNumber(obj[k]); obj[k]=(n===''||!Number.isFinite(n))?'':n; } /* <-- bug corrigido: era 'o[k]' */
+      if(k==="Contagem cíclica"){ const n=asNumber(obj[k]); obj[k]=(n===''||!Number.isFinite(n))?'':n; } /* bug original corrigido */
     });
     if(obj["Volume (tons)"]===undefined||obj["Volume (tons)"]===''){ const vin=asNumber(obj["Volume In (tons)"])||0, vout=asNumber(obj["Volume Out (tons)"])||0; obj["Volume (tons)"]=(vin>0||vout>0)?(vin+vout):''; }
     return obj;
@@ -737,11 +745,12 @@ function bootstrap(){
   const hasData = Array.isArray(DATA) && DATA.length>0;
   const afterDataReady = ()=>{
     renderUnits(DATA);
-    const minD=new Date(Math.min(...DATA.map(r=>+parseDateRaw(r.Data))));
-    const maxD=new Date(Math.max(...DATA.map(r=>+parseDateRaw(r.Data))));
-    if(!isNaN(minD)) dateStart.value=toISODateLocal(minD.getFullYear(),minD.getMonth()+1,minD.getDate());
-    if(!isNaN(maxD)) dateEnd.value=toISODateLocal(maxD.getFullYear(),maxD.getMonth()+1,maxD.getDate());
-    setActiveBlock(getActiveFromHash()); if(!location.hash) history.replaceState(null,'','#'+activeBlock);
+
+    /* ✅ Sempre: início = ontem, fim = hoje */
+    setDatesDefaultToYesterday();
+
+    setActiveBlock(getActiveFromHash());
+    if(!location.hash) history.replaceState(null,'','#'+activeBlock);
     buildAndRenderFarol();
   };
   if(hasData){ afterDataReady(); } else { loadExcelFromRepo().then(afterDataReady); }
@@ -769,9 +778,10 @@ csvInput.addEventListener('change',async e=>{
     if(!DATA.length) return alert('Arquivo vazio ou inválido.');
   }
   renderUnits(DATA); updateUnitPills();
-  const minD=new Date(Math.min(...DATA.map(r=>+parseDateRaw(r.Data)))); const maxD=new Date(Math.max(...DATA.map(r=>+parseDateRaw(r.Data))));
-  if(!isNaN(minD)) dateStart.value=toISODateLocal(minD.getFullYear(),minD.getMonth()+1,minD.getDate());
-  if(!isNaN(maxD)) dateEnd.value=toISODateLocal(maxD.getFullYear(),maxD.getMonth()+1,maxD.getDate());
+
+  /* ✅ Ao importar arquivo: início = ontem, fim = hoje */
+  setDatesDefaultToYesterday();
+
   refresh();
 });
 
@@ -780,8 +790,7 @@ bootstrap();
 /* ===== Header stuck shadow ===== */
 (function(){
   const hdr=document.getElementById('appHeader');
-  let lastY=0;
-  const onScroll=()=>{ const y=window.scrollY||document.documentElement.scrollTop; hdr.classList.toggle('is-stuck', y>2); lastY=y; };
+  const onScroll=()=>{ const y=window.scrollY||document.documentElement.scrollTop; hdr.classList.toggle('is-stuck', y>2); };
   document.addEventListener('scroll', onScroll, {passive:true});
   onScroll();
 })();
