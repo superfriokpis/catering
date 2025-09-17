@@ -14,27 +14,28 @@
    Design System & Premium Enhancements
    ========================================================================== */
 :root {
-  /* Palette: Cores refinadas para um visual mais sofisticado */
+  /* Palette */
   --brand-primary: #1d4ed8;
   --brand-primary-dark: #1e40af;
   --brand-primary-light: #eff5ff;
   --brand-gradient-start: #2563eb;
   --brand-gradient-end: #3b82f6;
 
-  /* Neutrals: Tons de cinza para texto e fundos, melhorando o contraste */
-  --text-primary: #1e293b;
+  --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-subtle: #64748b;
+
   --surface-default: #ffffff;
   --surface-subtle: #f8fafc;
+
   --border-default: #e2e8f0;
   --border-strong: #cbd5e1;
 
-  /* AJUSTE: Paleta de status refinada (Proposta 2) */
-  --status-ok-border: #10b981;    /* Esmeralda */
-  --status-warn-border: #f97316;  /* Laranja */
-  --status-bad-border: #f43f5e;     /* Rosé */
-  
+  /* Status */
+  --status-ok-border: #10b981;
+  --status-warn-border: #f97316;
+  --status-bad-border: #f43f5e;
+
   --status-ok-fg: #047857;
   --status-warn-fg: #c2410c;
   --status-bad-fg: #be123c;
@@ -42,16 +43,22 @@
   --status-ok-bg: rgba(16, 185, 129, 0.08);
   --status-warn-bg: rgba(249, 115, 22, 0.08);
   --status-bad-bg: rgba(244, 63, 94, 0.08);
-  
-  --status-neutral-bg: #f8fafc; --status-neutral-fg: #475569; --status-neutral-border: #94a3b8;
+
+  --status-neutral-bg: #f8fafc; 
+  --status-neutral-fg: #475569; 
+  --status-neutral-border: #94a3b8;
 
   /* UI Metrics */
   --border-radius-sm: .5rem;
   --border-radius-md: .75rem;
   --border-radius-lg: 1rem;
+
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Layout safe areas */
+  --safe-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
 }
 
 html, body {
@@ -63,12 +70,26 @@ html, body {
 }
 
 /* ==========================================================================
-   Component Styles
+   Header / Nav
    ========================================================================== */
 .brand-grad {
   background: linear-gradient(90deg, var(--brand-primary-dark), var(--brand-primary));
 }
 
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: saturate(1.05);
+  box-shadow: var(--shadow-sm);
+}
+.app-header.is-stuck {
+  box-shadow: 0 8px 24px rgb(2 6 23 / .15);
+}
+
+/* ==========================================================================
+   Pills & Buttons
+   ========================================================================== */
 .tab, .pill {
   display: inline-flex;
   align-items: center;
@@ -88,6 +109,10 @@ html, body {
 .tab:hover, .pill:hover {
   background: var(--brand-primary-light);
   border-color: #a5b4fc;
+}
+.tab:focus-visible, .pill:focus-visible, .btn:focus-visible, .minimal-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-primary-light), 0 0 0 1.5px var(--brand-primary);
 }
 .tab[aria-current="page"], .pill[aria-pressed="true"] {
   background: linear-gradient(135deg, var(--brand-gradient-start), var(--brand-gradient-end));
@@ -112,10 +137,10 @@ html, body {
 .btn-primary { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
 .btn-primary:hover { background: var(--brand-primary-dark); }
 
-#cards {
-  display: grid !important;
-  gap: 12px;
-}
+/* ==========================================================================
+   Cards
+   ========================================================================== */
+#cards { display: grid !important; gap: 12px; }
 .kpi-card {
   display: flex;
   flex-direction: column;
@@ -128,43 +153,36 @@ html, body {
   border: 1px solid var(--border-default);
   transition: transform .2s ease-out, box-shadow .2s ease-out;
 }
-.kpi-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 .kpi-card .card-label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .kpi-card .card-value {
   font-size: clamp(16px, 1.5vw, 20px);
-  font-weight: 700; /* Aumentado o peso para dar mais destaque ao valor colorido */
+  font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-variant-numeric: tabular-nums;
 }
-.kpi-card .card-value.is-money {
-  font-size: clamp(14px, 1.2vw, 18px);
-}
+.kpi-card .card-value.is-money { font-size: clamp(14px, 1.2vw, 18px); }
 
-/* AJUSTE: Implementação da Proposta 2 */
-.ok .card-value { color: var(--status-ok-border); }
+/* status no topo e valor colorido */
+.ok .card-value   { color: var(--status-ok-border); }
 .warn .card-value { color: var(--status-warn-border); }
-.bad .card-value { color: var(--status-bad-border); }
+.bad .card-value  { color: var(--status-bad-border); }
 
-.ok { border-top-color: var(--status-ok-border); }
+.ok   { border-top-color: var(--status-ok-border); }
 .warn { border-top-color: var(--status-warn-border); }
-.bad { border-top-color: var(--status-bad-border); }
+.bad  { border-top-color: var(--status-bad-border); }
 .neutral { border-top-color: var(--status-neutral-border); }
 
-
+/* ==========================================================================
+   Sections & Tables
+   ========================================================================== */
 .data-section {
   background-color: var(--surface-default);
   border-radius: var(--border-radius-lg);
@@ -176,55 +194,66 @@ html, body {
   padding: .75rem 1rem;
   border-bottom: 1px solid var(--border-default);
   background-color: var(--surface-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
 }
 .data-section-title {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--brand-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 .data-section-content { padding: .5rem; }
 
-table.kpi {
-  width: 100%;
-  border-collapse: collapse;
-}
+table.kpi { width: 100%; border-collapse: collapse; }
 table.kpi th, table.kpi td {
   padding: .6rem .5rem;
-  font-size: 12px;
-  text-align: center;
-  vertical-align: middle;
-  white-space: nowrap;
+  font-size: 12px; text-align: center; vertical-align: middle; white-space: nowrap;
 }
 table.kpi thead th {
   position: sticky; top: 0; z-index: 1;
   background: var(--brand-primary-dark);
-  color: #fff;
-  font-weight: 600;
+  color: #fff; font-weight: 700;
+  box-shadow: 0 1px 0 var(--border-default);
 }
 table.kpi tbody tr { border-bottom: 1px solid var(--border-default); }
 table.kpi tbody tr:last-child { border-bottom: none; }
 table.kpi tbody tr:hover { background-color: var(--brand-primary-light); }
 
-.col-unidade{min-width:100px}.col-data{min-width:110px}.col-num{min-width:80px}
-#secRH table.kpi th, #secRH table.kpi td, #secTransp table.kpi th, #secTransp table.kpi td { font-size: clamp(10px, .9vw, 12px); }
+.col-unidade{min-width:100px}
+.col-data{min-width:110px}
+.col-num{min-width:80px}
+
+/* RH e Transp fontes responsivas */
+#secRH table.kpi th, #secRH table.kpi td,
+#secTransp table.kpi th, #secTransp table.kpi td {
+  font-size: clamp(10px, .9vw, 12px);
+}
 
 /* Legenda */
 .legend-dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; margin-right: .35rem; }
-.dot-ok{background: var(--status-ok-border);}.dot-warn{background: var(--status-warn-border);}.dot-bad{background: var(--status-bad-border);}
+.dot-ok{background: var(--status-ok-border);}
+.dot-warn{background: var(--status-warn-border);}
+.dot-bad{background: var(--status-bad-border);}
 
-/* === Farol (modal e tabela) === */
-.fab{position:fixed;right:18px;bottom:18px;z-index:9999;padding:.9rem 1.1rem;border-radius:999px;border:0;background:var(--brand-primary);color:#fff;font-weight:600;box-shadow:var(--shadow-lg);cursor:pointer; transition: transform .2s ease-out;}
+/* ==========================================================================
+   Farol (modal e tabela)
+   ========================================================================== */
+.fab{
+  position:fixed;right:18px;bottom:var(--safe-bottom);z-index:9999;
+  padding:.9rem 1.1rem;border-radius:999px;border:0;background:var(--brand-primary);
+  color:#fff;font-weight:600;box-shadow:var(--shadow-lg);cursor:pointer; transition: transform .2s ease-out;
+}
 .fab:hover { transform: scale(1.05); }
+.fab:focus-visible { outline:none; box-shadow:0 0 0 3px var(--brand-primary-light), 0 0 0 1.5px var(--brand-primary); }
+
 #modalFarol::backdrop{background:rgba(2,6,23,.5); backdrop-filter: blur(4px); }
 #modalFarol .hdr{background:linear-gradient(90deg,var(--brand-primary-dark), var(--brand-primary));color:#fff}
 .faro-legend .chip{display:inline-flex;align-items:center;gap:8px;font-size:12px;padding:.2rem .6rem;border-radius:999px;background:#f8fafc;border:1px solid var(--border-default)}
 .dot{display:inline-block;width:12px;height:12px;border-radius:999px}
-.dot.g{background: var(--status-ok-border);}.dot.y{background: var(--status-warn-border);}.dot.r{background: var(--status-bad-border);}
+.dot.g{background: var(--status-ok-border);}
+.dot.y{background: var(--status-warn-border);}
+.dot.r{background: var(--status-bad-border);}
 .tbl-farol{width:100%;border-collapse:separate;border-spacing:0}
 .tbl-farol th{font-size:12px;background:var(--brand-primary);color:#fff;text-align:left;padding:10px;border-top-left-radius:var(--border-radius-sm);border-top-right-radius:var(--border-radius-sm)}
 .tbl-farol td{padding:12px 10px;border-bottom:1px solid #eff2f7}
@@ -232,10 +261,36 @@ table.kpi tbody tr:hover { background-color: var(--brand-primary-light); }
 .cell-dot{display:flex;align-items:center;gap:8px}
 .minimal-input{border:1px solid var(--border-default);border-radius:var(--border-radius-md);padding:8px 12px;font-size:13px;width:320px; transition: all .2s;}
 .minimal-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-light); outline:none; }
+
+/* ==========================================================================
+   Aux
+   ========================================================================== */
+main { padding-bottom: 120px; } /* espaço para os FABs não cobrirem conteúdo */
+
+@media (max-width: 640px){
+  /* deixar mais espaço no mobile para botões flutuantes */
+  main { padding-bottom: 160px; }
+}
+
+/* Acessibilidade: melhora foco no teclado */
+a, button, input, summary { outline-offset: 2px; }
+
+/* Preferência do usuário: reduzir movimento */
+@media (prefers-reduced-motion: reduce){
+  .kpi-card, .fab { transition: none !important; }
+}
+
+/* Impressão do Farol: visual limpo */
+@media print {
+  header, nav, .fab, .insights-fab, #panelInsights, #modalMetas, #metasBadges, #cards, main > details { display: none !important; }
+  #modalFarol, #modalFarol * { display: block !important; position: static !important; inset: auto !important; }
+  .tbl-farol { font-size: 12px; }
+}
 </style>
 </head>
+
 <body class="bg-slate-50">
-<header class="brand-grad text-white shadow-md">
+<header class="brand-grad text-white shadow-md app-header" id="appHeader">
   <div class="max-w-[1500px] mx-auto px-4 py-3">
     <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
       <div class="flex items-center gap-3 pr-4 mr-2 border-r border-white/20">
@@ -301,7 +356,7 @@ table.kpi tbody tr:hover { background-color: var(--brand-primary-light); }
   <section id="secArm" class="data-section">
     <div class="data-section-header">
       <h2 class="data-section-title">ARMAZÉM</h2>
-      <span id="rowsArm" class="text-xs text-slate-500"></span>
+      <span id="rowsArm" class="text-xs text-slate-500" aria-live="polite"></span>
     </div>
     <div class="data-section-content overflow-x-auto">
       <table class="kpi"><thead id="theadArm"></thead><tbody id="tbodyArm"></tbody></table>
@@ -311,7 +366,7 @@ table.kpi tbody tr:hover { background-color: var(--brand-primary-light); }
   <section id="secRH" class="data-section hidden">
     <div class="data-section-header">
       <h2 class="data-section-title">RH</h2>
-      <span id="rowsRH" class="text-xs text-slate-500"></span>
+      <span id="rowsRH" class="text-xs text-slate-500" aria-live="polite"></span>
     </div>
     <div class="data-section-content overflow-x-auto">
       <table class="kpi"><thead id="theadRH"></thead><tbody id="tbodyRH"></tbody></table>
@@ -321,7 +376,7 @@ table.kpi tbody tr:hover { background-color: var(--brand-primary-light); }
   <section id="secTransp" class="data-section hidden">
     <div class="data-section-header">
       <h2 class="data-section-title">TRANSPORTE</h2>
-      <span id="rowsTransp" class="text-xs text-slate-500"></span>
+      <span id="rowsTransp" class="text-xs text-slate-500" aria-live="polite"></span>
     </div>
     <div class="data-section-content overflow-x-auto">
       <table class="kpi"><thead id="theadTransp"></thead><tbody id="tbodyTransp"></tbody></table>
@@ -585,6 +640,7 @@ function setActiveBlock(block){
 }
 window.addEventListener('hashchange',()=>setActiveBlock(getActiveFromHash()));
 
+/* sets */
 const PCT = new Set(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"]);
 const MONEY = new Set(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"]);
 const INTLIKE = new Set(["Paletes Pendentes","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Horas Extras Armazém","Horas Extras Transporte"]);
@@ -629,7 +685,7 @@ function parseCSV(text){
     Object.keys(obj).forEach(k=>{
       if(PCT.has(k)) { obj[k]=normPct(obj[k]); return; }
       if(MONEY.has(k) || INTLIKE.has(k) || TONS.has(k)) { const n=asNumber(obj[k]); obj[k]=(n===''||!Number.isFinite(n))?'':n; }
-      if(k==="Contagem cíclica"){ const n=asNumber(o[k]); obj[k]=(n===''||!Number.isFinite(n))?'':n; }
+      if(k==="Contagem cíclica"){ const n=asNumber(obj[k]); obj[k]=(n===''||!Number.isFinite(n))?'':n; } /* <-- bug corrigido: era 'o[k]' */
     });
     if(obj["Volume (tons)"]===undefined||obj["Volume (tons)"]===''){ const vin=asNumber(obj["Volume In (tons)"])||0, vout=asNumber(obj["Volume Out (tons)"])||0; obj["Volume (tons)"]=(vin>0||vout>0)?(vin+vout):''; }
     return obj;
@@ -721,6 +777,15 @@ csvInput.addEventListener('change',async e=>{
 
 bootstrap();
 
+/* ===== Header stuck shadow ===== */
+(function(){
+  const hdr=document.getElementById('appHeader');
+  let lastY=0;
+  const onScroll=()=>{ const y=window.scrollY||document.documentElement.scrollTop; hdr.classList.toggle('is-stuck', y>2); lastY=y; };
+  document.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+})();
+
 /* ============ FAROL DE PREENCHIMENTO ============ */
 const FAROL_FIELDS = {
   ARM_D1: ["Volume In (tons)","Volume Out (tons)","Corte (KG)","Contagem cíclica","ILA %","IRA %","Paletes Pendentes","Perdas (avarias e diferença de estoque)"],
@@ -792,22 +857,36 @@ function renderFarol(data, D_iso, D1_iso){
 </script>
 
 <style>
-  .insights-fab{position:fixed;right:18px;bottom:86px;z-index:9998;padding:.9rem 1.1rem;border-radius:999px;border:0;background:var(--brand-primary);color:#fff;font-weight:600;box-shadow:var(--shadow-lg);cursor:pointer; transition: transform .2s ease-out;}
+  .insights-fab{
+    position:fixed;right:18px;bottom:calc(var(--safe-bottom) + 68px);z-index:9998;
+    padding:.9rem 1.1rem;border-radius:999px;border:0;background:var(--brand-primary);
+    color:#fff;font-weight:600;box-shadow:var(--shadow-lg);cursor:pointer; transition: transform .2s ease-out;
+  }
   .insights-fab:hover { transform: scale(1.05); }
-  .insights-panel{position:fixed;right:18px;bottom:154px;z-index:9998;width:min(720px,92vw);max-height:75vh;overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 20px 40px rgba(2,6,23,.18)}
+  .insights-fab:focus-visible { outline:none; box-shadow:0 0 0 3px var(--brand-primary-light), 0 0 0 1.5px var(--brand-primary); }
+
+  .insights-panel{
+    position:fixed;right:18px;bottom:calc(var(--safe-bottom) + 136px);z-index:9998;
+    width:min(720px,92vw);max-height:75vh;overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 20px 40px rgba(2,6,23,.18)
+  }
   .insights-panel header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #eef2ff;background:linear-gradient(90deg,var(--brand-primary-dark),var(--brand-primary));color:#fff;border-top-left-radius:16px;border-top-right-radius:16px}
   .insights-panel section{padding:14px 16px}
   .chip{display:inline-flex;align-items:center;gap:6px;padding:.18rem .5rem;border-radius:999px;border:1px solid #e5e7eb;font-size:12px;background:#f8fafc;color:#0f172a}
-  .ok{color:#065f46} .warn{color:#92400e} .bad{color:#991b1b}
+
+  /* ESCOPADOS para não conflitar com os cards de status */
+  .insights-panel .ok{color:#065f46}
+  .insights-panel .warn{color:#92400e}
+  .insights-panel .bad{color:#991b1b}
+
   .list{margin:8px 0 0 0;padding-left:16px}
   .list li{margin:4px 0}
   .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;background:#f3f4f6;border:1px solid #e5e7eb;border-bottom-width:2px;padding:.05rem .35rem;border-radius:6px}
 </style>
 
 <button class="insights-fab" id="btnInsights">Analisar KPIs</button>
-<div class="insights-panel" id="panelInsights" style="display:none">
+<div class="insights-panel" id="panelInsights" style="display:none" role="dialog" aria-modal="true" aria-labelledby="insightsTitle">
   <header>
-    <strong>Insights automáticos — KPIs</strong>
+    <strong id="insightsTitle">Insights automáticos — KPIs</strong>
     <button id="closeInsights" class="chip" title="Fechar">Fechar ✕</button>
   </header>
   <section id="insightsContent">
@@ -817,6 +896,7 @@ function renderFarol(data, D_iso, D1_iso){
 
 <script>
 (()=>{
+// thresholds (mesmos)
 const THRESH = {ONTIME_OK:95, ONTIME_CRIT:90, INFULL_OK:95, INFULL_CRIT:90, FILL_OK:98, FILL_CRIT:95, ILA_OK:100, IRA_OK:100, PERDAS_WARN:0.3, PERDAS_CRIT:1.0, OCUP_OK_MIN:85, OCUP_OK_MAX:95, TURNOVER_WARN:5, TURNOVER_CRIT:10, ABSENT_WARN:3, ABSENT_CRIT:5};
 const pct = v => (v!=null && !Number.isNaN(v)) ? `${v.toFixed(2)}%` : "—";
 function toNum(s){ if(!s) return NaN; const m=String(s).replace(/\s/g,'').match(/-?\d+(?:[\.,]\d+)?/); if(!m) return NaN; return parseFloat(m[0].replace('.','').replace(',','.')); }
