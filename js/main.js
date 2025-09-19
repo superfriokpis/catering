@@ -1,35 +1,26 @@
-// main.js — smoke test Data + State (sem alterar a UI)
+// main.js — orquestração mínima: Data -> State -> UI (apenas logs)
 import { Data } from "./data.js";
 import { State } from "./state.js";
+import { UI } from "./ui.js";
 
 async function bootstrap(){
-  console.info("[main] módulos carregados.");
-  console.info("[main] Data API:", Object.keys(Data));
+  console.info("[main] start");
 
-  // Sanity: parser
-  try {
-    const sample = 'Unidade,Data,"HE armazém e transporte"\nCWB3,01/01/2025,12';
-    const rowsSample = Data.parseCSV(sample);
-    console.info("[main] parseCSV (smoke):", rowsSample);
-  } catch (e) {
-    console.warn("[main] teste parseCSV falhou:", e);
-  }
+  UI.init(); // prepara UI (ainda sem tocar no DOM)
 
-  // Carregamento real da planilha via módulo
-  try {
-    const { rows, meta } = await Data.loadExcelFromRepo();
-    // salva no State
-    State.setData(rows);
-    // expõe para inspeção no console (debug apenas)
-    window.__rows  = rows;
-    window.__state = State;
-    window.__meta  = meta;
+  // Carrega planilha via módulo Data
+  const { rows, meta } = await Data.loadExcelFromRepo();
+  State.setData(rows);
 
-    console.info("[main] loadExcelFromRepo OK:", { linhas: rows.length, meta });
-    console.info("[main] State.getData() ->", State.getData().slice(0,2));
-  } catch (e) {
-    console.error("[main] loadExcelFromRepo ERRO:", e);
-  }
+  // Expor para inspeção, útil no debug
+  window.__state = State;
+  window.__rows  = rows;
+  window.__meta  = meta;
+
+  console.info("[main] dados carregados:", { linhas: rows.length, meta });
+
+  // Chama a UI para ‘reagir’ (por enquanto, só loga)
+  UI.refresh();
 }
 
 bootstrap();
