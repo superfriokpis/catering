@@ -397,7 +397,7 @@ const parseDateRaw = s=>{
   return new Date(s);
 };
 const asNumber=(v)=>{ if(v===null||v===undefined) return ''; const s=String(v).trim(); if(s===''||isDash(s)) return ''; const n=Number(s.replace(/R\$\s?/i,'').replace(/\./g,'').replace(',','.').replace(/%/g,'')); return Number.isFinite(n)?n:''; };
-const asDateISO=(v)=>{ if(v==null||v===''||isDash(v)) return ''; if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v); if(!d) return ''; return toISODateLocal(d.y,d.m,d.d);} const s=String(v).trim(); const m=s.match(/^(\d{2})[./](\d{2})[./](\d{4})$/); if(m) return toISODateLocal(+m[3],+m[2],+m[1]); const dt=new Date(s); return isNaN(dt)?'':toISODateLocal(dt.getFullYear(),dt.getMonth()+1,dt.getDate()); };
+const asDateISO=(v)=>{ if(v==null||v===''||isDash(v)) return ''; if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v); if(!d) return ''; return toISODateLocal(d.y,d.m,d.d);} const s=String(v).trim(); const m=s.match(/^(\d{2})[./](\d{2})[./](\d{4})$/); if(m) return toISODateLocal(+m[3],+m[2]-1,+m[1]); const dt=new Date(s); return isNaN(dt)?'':toISODateLocal(dt.getFullYear(),dt.getMonth()+1,dt.getDate()); };
 
 /* ✅ Default dates: início = ontem (D-1), fim = hoje */
 function setDatesDefaultToYesterday(){
@@ -462,8 +462,14 @@ function applyFilters(data){
 function enrich(r){
   const vin=asNumber(r["Volume In (tons)"])||0, vout=asNumber(r["Volume Out (tons)"])||0;
   if(vin>0||vout>0) r["Volume (tons)"]= r["Volume (tons)"]!=='' ? r["Volume (tons)"] : (vin+vout);
-  const hea=asNumber(r["Horas Extras Armazém"]), het=asNumber(r["Horas Extras Transporte"]);
-  r["HE armazém e transporte"]=(hea!==''||het!=='')?((hea||0)+(het||0)):'';
+
+  // ✅ Preservar HE total vindo da planilha; só recalcular se vierem colunas de HE separadas
+  const hea = asNumber(r["Horas Extras Armazém"]);
+  const het = asNumber(r["Horas Extras Transporte"]);
+  if (hea!=='' || het!=='') {
+    r["HE armazém e transporte"] = (hea||0) + (het||0);
+  }
+
   const lt=asNumber(r["Largada (Total de veículos)"])||0, ln=asNumber(r["Largada (Veículos que saíram no horario)"])||0;
   r["% On-time (calc)"]=lt>0?(ln/lt)*100:'';
   if(r["Custo MOT (armazém e transporte)"]===''||r["Custo MOT (armazém e transporte)"]==null) r["Custo MOT (armazém e transporte)"]='';
@@ -577,11 +583,27 @@ const PCT = new Set(["ILA %","IRA %","Perdas (avarias e diferença de estoque)",
 const MONEY = new Set(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"]);
 const INTLIKE = new Set(["Paletes Pendentes","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Horas Extras Armazém","Horas Extras Transporte"]);
 const TONS = new Set(["Volume In (tons)","Volume Out (tons)","Volume (tons)"]);
-const KEY_NUMERIC = new Set(["Volume In (tons)","Volume Out (tons)","Corte (KG)","Paletes Pendentes","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Ocorrências em R$ D-1","Contagem cíclica","ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)","Volume (tons)"]);
+const KEY_NUMERIC = new Set([
+  "Volume In (tons)","Volume Out (tons)","Corte (KG)","Paletes Pendentes",
+  "Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega",
+  "Ocorrências quantidade D-1","Ocorrências em R$ D-1",
+  "Contagem cíclica","ILA %","IRA %","Perdas (avarias e diferença de estoque)",
+  "Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1",
+  "Indisponibilidade de Frota (%)","Volume (tons)",
+  // ✅ passa a considerar HE total como “tem dado”
+  "HE armazém e transporte"
+]);
 
 const normalizeRow=(row)=>{
   const o={};
   for(const k in row){ const key=String(k).trim(); const val=isDash(row[k])?'':row[k]; o[key]=val; }
+
+  // ✅ alias: "Turn over" -> "Turnover"
+  if (o["Turn over"] !== undefined && o["Turnover"] === undefined) {
+    o["Turnover"] = o["Turn over"];
+    delete o["Turn over"];
+  }
+
   if(o["Indisponibilidade de Frota"]!==undefined && o["Indisponibilidade de Frota (%)"]===undefined) o["Indisponibilidade de Frota (%)"]=o["Indisponibilidade de Frota"];
   o["Data"]=asDateISO(o["Data"]);
 
@@ -614,6 +636,12 @@ function parseCSV(text){
     const obj={}; headers.forEach((h,i)=>obj[h]=cols[i]!==undefined?cols[i].trim():'');
     Object.keys(obj).forEach(k=>{ if(isDash(obj[k])) obj[k]=''; });
     if(obj["Data"] && /^\d{2}[./]\d{2}[./]\d{4}$/.test(obj["Data"])){ const [d,m,y]=obj["Data"].replace(/\./g,'/').split('/').map(Number); obj["Data"]=toISODateLocal(y,m,d); }
+
+    // normalização em CSV também
+    if (obj["Turn over"] !== undefined && obj["Turnover"] === undefined) {
+      obj["Turnover"] = obj["Turn over"]; delete obj["Turn over"];
+    }
+
     Object.keys(obj).forEach(k=>{
       if(PCT.has(k)) { obj[k]=normPct(obj[k]); return; }
       if(MONEY.has(k) || INTLIKE.has(k) || TONS.has(k)) { const n=asNumber(obj[k]); obj[k]=(n===''||!Number.isFinite(n))?'':n; }
