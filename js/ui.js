@@ -120,13 +120,6 @@ function ensureRHModCounter() {
   return el;
 }
 
-/* -------------------- ciclo de vida -------------------- */
-function init() {
-  console.info("[UI.init] ok");
-  // badge responsivo
-  //ensureBadge();
-  //repositionBadge();
-  window.addEventListener("resize", debounce(repositionBadge, 120));
 
   // reagir às mudanças de data
   const startEl = document.getElementById("dateStart");
