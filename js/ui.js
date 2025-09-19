@@ -1,22 +1,20 @@
-// ui.js — State + contador RH + badge responsivo + filtros de data + mini-cards + sparklines
+// ui.js — State + contador RH + badge + filtros de data + mini-cards + sparklines + delta D-1
 import { State } from "./state.js";
-import { KPIs } from "./features.js"; // mantém no topo
+import { KPIs } from "./features.js"; // manter no topo
 
 export const UI = (() => {
-  // ---- utils ----
+  // -------------------- utils --------------------
   function debounce(fn, ms = 150) {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
   }
 
-  // Parseia "YYYY-MM-DD" ou "DD/MM/YYYY" em Date (meia-noite local).
+  // Parse "YYYY-MM-DD" ou "DD/MM/YYYY" -> Date (meia-noite local)
   function parseDateAny(s) {
     if (!s) return null;
     const str = String(s).trim();
-    // yyyy-mm-dd
     let m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (m) return new Date(+m[1], +m[2]-1, +m[3], 0,0,0,0);
-    // dd/mm/yyyy
     m = str.match(/^(\d{2})[\/.](\d{2})[\/.](\d{4})$/);
     if (m) return new Date(+m[3], +m[2]-1, +m[1], 0,0,0,0);
     const d = new Date(str);
@@ -28,8 +26,7 @@ export const UI = (() => {
     const endEl   = document.getElementById("dateEnd");
     const ds = startEl ? parseDateAny(startEl.value) : null;
     const de = endEl   ? parseDateAny(endEl.value)   : null;
-    // fim inclusivo (23:59:59.999)
-    const deInc = de ? new Date(de.getFullYear(), de.getMonth(), de.getDate(), 23,59,59,999) : null;
+    const deInc = de ? new Date(de.getFullYear(), de.getMonth(), de.getDate(), 23,59,59,999) : null; // fim inclusivo
     return { ds, de: deInc };
   }
 
@@ -44,7 +41,7 @@ export const UI = (() => {
     });
   }
 
-  // ---- formatters ----
+  // -------------------- formatters --------------------
   const fmtMoneyBR = v =>
     (v==null || isNaN(v)) ? "—" : Number(v).toLocaleString("pt-BR", { style:"currency", currency:"BRL", maximumFractionDigits:0 });
 
@@ -54,7 +51,13 @@ export const UI = (() => {
   const fmtNum = v =>
     (v==null || isNaN(v)) ? "—" : Number(v).toLocaleString("pt-BR");
 
-  // ---- badge ----
+  const fmtDelta = v => {
+    if (v==null || isNaN(v)) return "—";
+    const sign = v > 0 ? "+" : "";
+    return `${sign}${v.toFixed(1).replace(".", ",")}%`;
+  };
+
+  // -------------------- badge --------------------
   function ensureBadge() {
     let el = document.getElementById("modBadge");
     if (!el) {
@@ -72,7 +75,7 @@ export const UI = (() => {
       el.style.color = "#0f172a";
       el.style.boxShadow = "0 2px 6px rgba(0,0,0,.08)";
       el.style.userSelect = "none";
-      el.style.pointerEvents = "none"; // não bloqueia cliques embaixo
+      el.style.pointerEvents = "none";
       el.title = "Status dos módulos (pode remover quando quiser)";
       document.body.appendChild(el);
     }
@@ -90,13 +93,13 @@ export const UI = (() => {
     for (const a of anchors) {
       const r = a.getBoundingClientRect();
       const distFromBottom = Math.max(0, window.innerHeight - r.top);
-      bottom = Math.max(bottom, distFromBottom + 24); // folga
+      bottom = Math.max(bottom, distFromBottom + 24);
     }
     if (window.innerWidth <= 640) bottom = Math.max(bottom, 72);
     el.style.bottom = `${Math.round(bottom)}px`;
   }
 
-  // ---- RH (módulos) ----
+  // -------------------- RH (módulos) --------------------
   const RH_FIELDS = [
     "HE armazém e transporte",
     "Turnover",
@@ -131,13 +134,13 @@ export const UI = (() => {
     return el;
   }
 
-  // ---- helpers para séries e sparklines ----
+  // -------------------- séries & sparklines --------------------
   function yyyymmdd(d) {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   }
 
   function groupByDate(rows) {
-    const map = new Map(); // key: yyyymmdd, value: array de linhas
+    const map = new Map();
     for (const r of rows || []) {
       const d = parseDateAny(r?.Data);
       if (!d) continue;
@@ -166,13 +169,32 @@ export const UI = (() => {
     return out;
   }
 
+  function dayOverDay(series) {
+    // série ordenada asc por data: [{date, value}]
+    if (!series || !series.length) return null;
+    // último válido
+    let j = series.length - 1;
+    while (j >= 0 && (series[j].value==null || isNaN(series[j].value))) j--;
+    if (j < 0) return null;
+    const last = series[j];
+
+    // anterior válido
+    let i = j - 1;
+    while (i >= 0 && (series[i].value==null || isNaN(series[i].value))) i--;
+    if (i < 0) return null;
+
+    const prev = series[i];
+    if (!isFinite(prev.value) || prev.value === 0) return null;
+
+    const deltaPct = ((last.value - prev.value) / Math.abs(prev.value)) * 100;
+    return { deltaPct, lastDate: last.date, prevDate: prev.date };
+  }
+
   function sparklineSVG(values, opts = {}) {
-    // values: [{date, value}], já ordenados. Desenha apenas a série de valores (ignora datas no cálculo).
     const w = opts.width || 120;
     const h = opts.height || 28;
     const strokeW = opts.strokeWidth || 1.5;
-    const padX = 2;
-    const padY = 2;
+    const padX = 2, padY = 2;
 
     const nums = values.map(v => v.value).filter(v => !isNaN(v));
     if (nums.length < 2) {
@@ -183,12 +205,10 @@ export const UI = (() => {
     const dx = (w - padX * 2) / (nums.length - 1);
     const scaleY = (val) => {
       if (max === min) return (h - padY * 2) / 2 + padY;
-      // invertido: maior valor em cima
       return padY + (h - padY * 2) * (1 - (val - min) / (max - min));
     };
 
     const pts = nums.map((v, i) => `${padX + i*dx},${scaleY(v)}`).join(" ");
-    const last = nums[nums.length - 1];
     const title = opts.title || "";
 
     return `
@@ -199,7 +219,7 @@ export const UI = (() => {
     `;
   }
 
-  // ---- Mini-cards de diagnóstico ----
+  // -------------------- mini-cards --------------------
   function ensureDiagPanel() {
     let el = document.getElementById("diagKPIs");
     if (!el) {
@@ -216,30 +236,86 @@ export const UI = (() => {
     return el;
   }
 
+  // regra de avaliação (queda = bom) para estes 4 indicadores
+  function deltaColorAndIcon(deltaPct, betterWhenLower = true) {
+    if (deltaPct == null || isNaN(deltaPct)) {
+      return { cls: "text-slate-500", icon: "•", title: "" };
+    }
+    const up = deltaPct > 0;
+    const good = betterWhenLower ? !up : up;
+    return {
+      cls: good ? "text-emerald-600" : "text-rose-600",
+      icon: up ? "↗" : "↘",
+      title: good ? "Melhor que ontem" : "Pior que ontem"
+    };
+  }
+
   function renderDiagnostics(kpi, rowsFiltered) {
-    // séries diárias
+    // séries por dia (filtradas pelo intervalo atual)
     const seriesHE   = dailyAgg(rowsFiltered, "HE armazém e transporte", "sum");
     const seriesMOT  = dailyAgg(rowsFiltered, "Custo MOT (armazém e transporte)", "sum");
     const seriesTurn = dailyAgg(rowsFiltered, "Turnover", "avg");
     const seriesAbs  = dailyAgg(rowsFiltered, "Absenteísmo", "avg");
+
+    // deltas D-1
+    const dHE   = dayOverDay(seriesHE);
+    const dMOT  = dayOverDay(seriesMOT);
+    const dTurn = dayOverDay(seriesTurn);
+    const dAbs  = dayOverDay(seriesAbs);
 
     const heSpark   = sparklineSVG(seriesHE,  { title: "HE por dia" });
     const motSpark  = sparklineSVG(seriesMOT, { title: "Custo MOT por dia" });
     const turnSpark = sparklineSVG(seriesTurn,{ title: "Turnover por dia" });
     const absSpark  = sparklineSVG(seriesAbs, { title: "Absenteísmo por dia" });
 
+    // queda é bom para todos estes
+    const heBadge   = dHE  ? deltaColorAndIcon(dHE.deltaPct,  true) : null;
+    const motBadge  = dMOT ? deltaColorAndIcon(dMOT.deltaPct, true) : null;
+    const turBadge  = dTurn? deltaColorAndIcon(dTurn.deltaPct,true) : null;
+    const absBadge  = dAbs ? deltaColorAndIcon(dAbs.deltaPct, true) : null;
+
     const host = ensureDiagPanel();
     const items = [
-      { label: "HE total", value: fmtNum(kpi.he_total), spark: heSpark },
-      { label: "Custo MOT total", value: fmtMoneyBR(kpi.custo_mot_total), spark: motSpark },
-      { label: "Turnover médio", value: fmtPct(kpi.turnover_avg_pct), spark: turnSpark },
-      { label: "Absenteísmo médio", value: fmtPct(kpi.abs_avg_pct), spark: absSpark },
+      {
+        label: "HE total",
+        value: fmtNum(kpi.he_total),
+        spark: heSpark,
+        delta: dHE ? fmtDelta(dHE.deltaPct) : "—",
+        badge: heBadge
+      },
+      {
+        label: "Custo MOT total",
+        value: fmtMoneyBR(kpi.custo_mot_total),
+        spark: motSpark,
+        delta: dMOT ? fmtDelta(dMOT.deltaPct) : "—",
+        badge: motBadge
+      },
+      {
+        label: "Turnover médio",
+        value: fmtPct(kpi.turnover_avg_pct),
+        spark: turnSpark,
+        delta: dTurn ? fmtDelta(dTurn.deltaPct) : "—",
+        badge: turBadge
+      },
+      {
+        label: "Absenteísmo médio",
+        value: fmtPct(kpi.abs_avg_pct),
+        spark: absSpark,
+        delta: dAbs ? fmtDelta(dAbs.deltaPct) : "—",
+        badge: absBadge
+      },
     ];
 
     host.innerHTML = `
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         ${items.map(it => `
-          <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+          <div class="relative bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+            <!-- delta no topo-direito -->
+            <div class="absolute top-2 right-2 text-[12px] font-medium ${it.badge ? it.badge.cls : "text-slate-500"}"
+                 title="${it.badge ? it.badge.title : ""}">
+              ${it.badge ? it.badge.icon : ""} ${it.delta}
+            </div>
+
             <div class="text-[12px] font-semibold text-slate-500">${it.label}</div>
             <div class="mt-1 text-[20px] font-bold text-slate-900 flex items-end justify-between gap-2">
               <span>${it.value}</span>
@@ -256,15 +332,13 @@ export const UI = (() => {
     `;
   }
 
-  // ---- ciclo de vida ----
+  // -------------------- ciclo de vida --------------------
   function init() {
     console.info("[UI.init] ok");
-    // badge responsivo
     ensureBadge();
     repositionBadge();
     window.addEventListener("resize", debounce(repositionBadge, 120));
 
-    // reagir às mudanças de data
     const startEl = document.getElementById("dateStart");
     const endEl   = document.getElementById("dateEnd");
     const onDateChange = debounce(() => refresh(), 120);
@@ -283,27 +357,20 @@ export const UI = (() => {
 
     console.info("[UI.refresh] dados (filtrados por data):", { total, ds, de, sample: filtered.slice(0,2) });
 
-    // badge (agora mostrando totais filtrados)
     const badge = ensureBadge();
     badge.textContent = `Módulos OK · ${total} linha(s) · ${unitCount} unidade(s)`;
     repositionBadge();
 
-    // contador RH (módulos) — também filtrado por data
     const rhCount = countRHRows(filtered);
     const rhSpan = ensureRHModCounter();
     rhSpan.textContent = `· módulos: ${rhCount} linha(s) RH`;
 
-    // cálculo de KPIs
+    // KPIs resumidos (mesma base do filtro)
     const kpi = KPIs.compute({ ds, de });
     console.info("[kpi.debug] resumo:", {
       linhas: kpi.rowsCount, unidades: kpi.unitsCount, amostra: kpi.sample
     });
-    console.info("[kpi.debug] HE total (h):", kpi.he_total, "— linhas válidas:", kpi.he_count);
-    console.info("[kpi.debug] Custo MOT total (R$):", kpi.custo_mot_total, "— linhas válidas:", kpi.custo_mot_count);
-    console.info("[kpi.debug] Turnover médio (%):", isNaN(kpi.turnover_avg_pct) ? "—" : kpi.turnover_avg_pct.toFixed(2));
-    console.info("[kpi.debug] Absenteísmo médio (%):", isNaN(kpi.abs_avg_pct) ? "—" : kpi.abs_avg_pct.toFixed(2));
 
-    // mini-cards + sparklines
     renderDiagnostics(kpi, filtered);
   }
 
