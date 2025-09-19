@@ -1,4 +1,4 @@
-// ui.js — ponte com o State + contador RH + badge responsivo + filtros de data
+// ui.js — ponte com o State + contador RH + badge responsivo + filtros de data + mini-cards de diagnóstico
 import { State } from "./state.js";
 import { KPIs } from "./features.js"; // <- certifique-se que o import está no topo do ui.js
 
@@ -43,6 +43,16 @@ export const UI = (() => {
       return true;
     });
   }
+
+  // ---- formatters ----
+  const fmtMoneyBR = v =>
+    (v==null || isNaN(v)) ? "—" : Number(v).toLocaleString("pt-BR", { style:"currency", currency:"BRL", maximumFractionDigits:0 });
+
+  const fmtPct = v =>
+    (v==null || isNaN(v)) ? "—" : `${Number(v).toFixed(1).replace(".", ",")}%`;
+
+  const fmtNum = v =>
+    (v==null || isNaN(v)) ? "—" : Number(v).toLocaleString("pt-BR");
 
   // ---- badge ----
   function ensureBadge() {
@@ -121,6 +131,47 @@ export const UI = (() => {
     return el;
   }
 
+  // ---- Mini-cards de diagnóstico ----
+  function ensureDiagPanel() {
+    let el = document.getElementById("diagKPIs");
+    if (!el) {
+      el = document.createElement("section");
+      el.id = "diagKPIs";
+      el.className = "max-w-[1500px] mx-auto px-4 mt-3";
+      const cards = document.getElementById("cards");
+      if (cards && cards.parentElement) {
+        cards.parentElement.insertAdjacentElement("afterend", el);
+      } else {
+        document.body.appendChild(el);
+      }
+    }
+    return el;
+  }
+
+  function renderDiagnostics(kpi) {
+    const host = ensureDiagPanel();
+    const items = [
+      { label: "HE total", value: fmtNum(kpi.he_total) },
+      { label: "Custo MOT total", value: fmtMoneyBR(kpi.custo_mot_total) },
+      { label: "Turnover médio", value: fmtPct(kpi.turnover_avg_pct) },
+      { label: "Absenteísmo médio", value: fmtPct(kpi.abs_avg_pct) },
+    ];
+
+    host.innerHTML = `
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        ${items.map(it => `
+          <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+            <div class="text-[12px] font-semibold text-slate-500">${it.label}</div>
+            <div class="mt-1 text-[20px] font-bold text-slate-900">${it.value}</div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="mt-1 text-[11px] text-slate-500">
+        Base filtrada: ${kpi.rowsCount} linha(s) · ${kpi.unitsCount} unidade(s)
+      </div>
+    `;
+  }
+
   // ---- ciclo de vida ----
   function init() {
     console.info("[UI.init] ok");
@@ -138,36 +189,39 @@ export const UI = (() => {
   }
 
   function refresh() {
-  const all = State.getData() || [];
-  const { ds, de } = getDateRangeFromDOM();
-  const filtered = filterByDate(all, ds, de);
+    const all = State.getData() || [];
+    const { ds, de } = getDateRangeFromDOM();
+    const filtered = filterByDate(all, ds, de);
 
-  const total = filtered.length;
-  const units = [...new Set(filtered.map(r => r.Unidade).filter(Boolean))];
-  const unitCount = units.length;
+    const total = filtered.length;
+    const units = [...new Set(filtered.map(r => r.Unidade).filter(Boolean))];
+    const unitCount = units.length;
 
-  console.info("[UI.refresh] dados (filtrados por data):", { total, ds, de, sample: filtered.slice(0,2) });
+    console.info("[UI.refresh] dados (filtrados por data):", { total, ds, de, sample: filtered.slice(0,2) });
 
-  // badge (agora mostrando totais filtrados)
-  const badge = ensureBadge();
-  badge.textContent = `Módulos OK · ${total} linha(s) · ${unitCount} unidade(s)`;
-  repositionBadge();
+    // badge (agora mostrando totais filtrados)
+    const badge = ensureBadge();
+    badge.textContent = `Módulos OK · ${total} linha(s) · ${unitCount} unidade(s)`;
+    repositionBadge();
 
-  // contador RH (módulos) — também filtrado por data
-  const rhCount = countRHRows(filtered);
-  const rhSpan = ensureRHModCounter();
-  rhSpan.textContent = `· módulos: ${rhCount} linha(s) RH`;
+    // contador RH (módulos) — também filtrado por data
+    const rhCount = countRHRows(filtered);
+    const rhSpan = ensureRHModCounter();
+    rhSpan.textContent = `· módulos: ${rhCount} linha(s) RH`;
 
-  // === NOVO: cálculo de KPIs e LOG (sem alterar UI) ===
-  const kpi = KPIs.compute({ ds, de /*, units */ });
-  console.info("[kpi.debug] resumo:", {
-    linhas: kpi.rowsCount, unidades: kpi.unitsCount, amostra: kpi.sample
-  });
-  console.info("[kpi.debug] HE total (h):", kpi.he_total, "— linhas válidas:", kpi.he_count);
-  console.info("[kpi.debug] Custo MOT total (R$):", kpi.custo_mot_total, "— linhas válidas:", kpi.custo_mot_count);
-  console.info("[kpi.debug] Turnover médio (%):", isNaN(kpi.turnover_avg_pct) ? "—" : kpi.turnover_avg_pct.toFixed(2));
-  console.info("[kpi.debug] Absenteísmo médio (%):", isNaN(kpi.abs_avg_pct) ? "—" : kpi.abs_avg_pct.toFixed(2));
-}
+    // cálculo de KPIs
+    const kpi = KPIs.compute({ ds, de });
+    console.info("[kpi.debug] resumo:", {
+      linhas: kpi.rowsCount, unidades: kpi.unitsCount, amostra: kpi.sample
+    });
+    console.info("[kpi.debug] HE total (h):", kpi.he_total, "— linhas válidas:", kpi.he_count);
+    console.info("[kpi.debug] Custo MOT total (R$):", kpi.custo_mot_total, "— linhas válidas:", kpi.custo_mot_count);
+    console.info("[kpi.debug] Turnover médio (%):", isNaN(kpi.turnover_avg_pct) ? "—" : kpi.turnover_avg_pct.toFixed(2));
+    console.info("[kpi.debug] Absenteísmo médio (%):", isNaN(kpi.abs_avg_pct) ? "—" : kpi.abs_avg_pct.toFixed(2));
+
+    // mini-cards de diagnóstico
+    renderDiagnostics(kpi);
+  }
 
   return { init, refresh };
 })();
