@@ -1,6 +1,6 @@
-// ui.js — ponte com o State + contador RH + badge responsivo + filtros de data + mini-cards de diagnóstico
+// ui.js — State + contador RH + badge responsivo + filtros de data + mini-cards + sparklines
 import { State } from "./state.js";
-import { KPIs } from "./features.js"; // <- certifique-se que o import está no topo do ui.js
+import { KPIs } from "./features.js"; // mantém no topo
 
 export const UI = (() => {
   // ---- utils ----
@@ -34,7 +34,7 @@ export const UI = (() => {
   }
 
   function filterByDate(rows, ds, deInc) {
-    if (!ds && !deInc) return rows;
+    if (!ds && !deInc) return rows || [];
     return (rows || []).filter(r => {
       const d = parseDateAny(r?.Data);
       if (!d) return false;
@@ -131,6 +131,74 @@ export const UI = (() => {
     return el;
   }
 
+  // ---- helpers para séries e sparklines ----
+  function yyyymmdd(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+
+  function groupByDate(rows) {
+    const map = new Map(); // key: yyyymmdd, value: array de linhas
+    for (const r of rows || []) {
+      const d = parseDateAny(r?.Data);
+      if (!d) continue;
+      const k = yyyymmdd(d);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k).push(r);
+    }
+    return map;
+  }
+
+  // mode: "sum" | "avg"
+  function dailyAgg(rows, key, mode = "sum") {
+    const map = groupByDate(rows);
+    const out = [];
+    for (const [k, arr] of map.entries()) {
+      let s = 0, c = 0;
+      for (const r of arr) {
+        const v = r[key];
+        const n = (v==='' || v==null) ? NaN : Number(v);
+        if (!isNaN(n)) { s += n; c++; }
+      }
+      const val = c ? (mode === "avg" ? s / c : s) : NaN;
+      out.push({ date: k, value: val });
+    }
+    out.sort((a,b) => a.date.localeCompare(b.date));
+    return out;
+  }
+
+  function sparklineSVG(values, opts = {}) {
+    // values: [{date, value}], já ordenados. Desenha apenas a série de valores (ignora datas no cálculo).
+    const w = opts.width || 120;
+    const h = opts.height || 28;
+    const strokeW = opts.strokeWidth || 1.5;
+    const padX = 2;
+    const padY = 2;
+
+    const nums = values.map(v => v.value).filter(v => !isNaN(v));
+    if (nums.length < 2) {
+      return `<svg width="${w}" height="${h}" role="img" aria-label="sem dados"></svg>`;
+    }
+    const min = Math.min(...nums);
+    const max = Math.max(...nums);
+    const dx = (w - padX * 2) / (nums.length - 1);
+    const scaleY = (val) => {
+      if (max === min) return (h - padY * 2) / 2 + padY;
+      // invertido: maior valor em cima
+      return padY + (h - padY * 2) * (1 - (val - min) / (max - min));
+    };
+
+    const pts = nums.map((v, i) => `${padX + i*dx},${scaleY(v)}`).join(" ");
+    const last = nums[nums.length - 1];
+    const title = opts.title || "";
+
+    return `
+      <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${title}">
+        <polyline fill="none" stroke="currentColor" stroke-width="${strokeW}" points="${pts}" />
+        <title>${title}</title>
+      </svg>
+    `;
+  }
+
   // ---- Mini-cards de diagnóstico ----
   function ensureDiagPanel() {
     let el = document.getElementById("diagKPIs");
@@ -148,13 +216,24 @@ export const UI = (() => {
     return el;
   }
 
-  function renderDiagnostics(kpi) {
+  function renderDiagnostics(kpi, rowsFiltered) {
+    // séries diárias
+    const seriesHE   = dailyAgg(rowsFiltered, "HE armazém e transporte", "sum");
+    const seriesMOT  = dailyAgg(rowsFiltered, "Custo MOT (armazém e transporte)", "sum");
+    const seriesTurn = dailyAgg(rowsFiltered, "Turnover", "avg");
+    const seriesAbs  = dailyAgg(rowsFiltered, "Absenteísmo", "avg");
+
+    const heSpark   = sparklineSVG(seriesHE,  { title: "HE por dia" });
+    const motSpark  = sparklineSVG(seriesMOT, { title: "Custo MOT por dia" });
+    const turnSpark = sparklineSVG(seriesTurn,{ title: "Turnover por dia" });
+    const absSpark  = sparklineSVG(seriesAbs, { title: "Absenteísmo por dia" });
+
     const host = ensureDiagPanel();
     const items = [
-      { label: "HE total", value: fmtNum(kpi.he_total) },
-      { label: "Custo MOT total", value: fmtMoneyBR(kpi.custo_mot_total) },
-      { label: "Turnover médio", value: fmtPct(kpi.turnover_avg_pct) },
-      { label: "Absenteísmo médio", value: fmtPct(kpi.abs_avg_pct) },
+      { label: "HE total", value: fmtNum(kpi.he_total), spark: heSpark },
+      { label: "Custo MOT total", value: fmtMoneyBR(kpi.custo_mot_total), spark: motSpark },
+      { label: "Turnover médio", value: fmtPct(kpi.turnover_avg_pct), spark: turnSpark },
+      { label: "Absenteísmo médio", value: fmtPct(kpi.abs_avg_pct), spark: absSpark },
     ];
 
     host.innerHTML = `
@@ -162,7 +241,12 @@ export const UI = (() => {
         ${items.map(it => `
           <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
             <div class="text-[12px] font-semibold text-slate-500">${it.label}</div>
-            <div class="mt-1 text-[20px] font-bold text-slate-900">${it.value}</div>
+            <div class="mt-1 text-[20px] font-bold text-slate-900 flex items-end justify-between gap-2">
+              <span>${it.value}</span>
+              <span class="text-slate-600" style="width:120px;height:28px;display:inline-flex;align-items:center">
+                ${it.spark}
+              </span>
+            </div>
           </div>
         `).join("")}
       </div>
@@ -219,8 +303,8 @@ export const UI = (() => {
     console.info("[kpi.debug] Turnover médio (%):", isNaN(kpi.turnover_avg_pct) ? "—" : kpi.turnover_avg_pct.toFixed(2));
     console.info("[kpi.debug] Absenteísmo médio (%):", isNaN(kpi.abs_avg_pct) ? "—" : kpi.abs_avg_pct.toFixed(2));
 
-    // mini-cards de diagnóstico
-    renderDiagnostics(kpi);
+    // mini-cards + sparklines
+    renderDiagnostics(kpi, filtered);
   }
 
   return { init, refresh };
