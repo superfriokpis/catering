@@ -124,8 +124,8 @@ function ensureRHModCounter() {
 function init() {
   console.info("[UI.init] ok");
   // badge responsivo
-  ensureBadge();
-  repositionBadge();
+  //ensureBadge();
+  //repositionBadge();
   window.addEventListener("resize", debounce(repositionBadge, 120));
 
   // reagir às mudanças de data
