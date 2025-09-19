@@ -1,4 +1,4 @@
-// ui.js — versão “pausada”: sem cards/painel do RH (somente badge, filtros e contador RH)
+// ui.js — versão sem badge (removido) e com init() corrigido
 import { State } from "./state.js";
 import { KPIs } from "./features.js";
 
@@ -43,54 +43,12 @@ function filterByDate(rows, ds, deInc) {
   });
 }
 
-/* -------------------- badge (rodapé flutuante) -------------------- */
-function ensureBadge() {
-  let el = document.getElementById("modBadge");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "modBadge";
-    el.style.position = "fixed";
-    el.style.right = "16px";
-    el.style.zIndex = "99999";
-    el.style.fontFamily = "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
-    el.style.fontSize = "12px";
-    el.style.padding = "6px 10px";
-    el.style.borderRadius = "999px";
-    el.style.background = "rgba(37, 99, 235, 0.08)";
-    el.style.border = "1px solid #cbd5e1";
-    el.style.color = "#0f172a";
-    el.style.boxShadow = "0 2px 6px rgba(0,0,0,.08)";
-    el.style.userSelect = "none";
-    el.style.pointerEvents = "none"; // não bloqueia cliques embaixo
-    el.title = "Status dos módulos";
-    document.body.appendChild(el);
-  }
-  return el;
-}
-
-function repositionBadge() {
-  const el = document.getElementById("modBadge");
-  if (!el) return;
-  let bottom = 16;
-  const anchors = [
-    document.getElementById("btnFarol"),
-    document.getElementById("btnInsights"),
-  ].filter(Boolean);
-  for (const a of anchors) {
-    const r = a.getBoundingClientRect();
-    const distFromBottom = Math.max(0, window.innerHeight - r.top);
-    bottom = Math.max(bottom, distFromBottom + 24); // folga
-  }
-  if (window.innerWidth <= 640) bottom = Math.max(bottom, 72);
-  el.style.bottom = `${Math.round(bottom)}px`;
-}
-
-/* -------------------- RH: contador de linhas (fica na barra do bloco) -------------------- */
+/* -------------------- RH: contador de linhas -------------------- */
 const RH_FIELDS = [
   "HE armazém e transporte",
   "Turnover",
   "Absenteísmo",
-  "Custo MOT (armazém e transporte)"
+  "Custo MOT (armazém e transporte)",
 ];
 
 function countRHRows(data) {
@@ -120,6 +78,12 @@ function ensureRHModCounter() {
   return el;
 }
 
+/* -------------------- ciclo de vida -------------------- */
+function init() {
+  console.info("[UI.init] ok (badge desativado)");
+  // Se sobrou badge antigo no DOM (por cache), remove:
+  const ghost = document.getElementById("modBadge");
+  if (ghost) ghost.remove();
 
   // reagir às mudanças de data
   const startEl = document.getElementById("dateStart");
@@ -134,23 +98,16 @@ function refresh() {
   const { ds, de } = getDateRangeFromDOM();
   const filtered = filterByDate(all, ds, de);
 
-  const total = filtered.length;
-  const units = [...new Set(filtered.map(r => r.Unidade).filter(Boolean))];
-  const unitCount = units.length;
+  // Garante que qualquer badge antigo não reapareça:
+  const ghost = document.getElementById("modBadge");
+  if (ghost) ghost.remove();
 
-  console.info("[UI.refresh] dados (filtrados por data):", { total, ds, de, sample: filtered.slice(0, 2) });
-
-  // badge (mostrando totais filtrados por data)
-  const badge = ensureBadge();
-  badge.textContent = `Módulos OK · ${total} linha(s) · ${unitCount} unidade(s)`;
-  repositionBadge();
-
-  // contador RH (módulos) — também filtrado por data
+  // contador RH (módulos) — filtrado por data (apenas texto na barra do RH)
   const rhCount = countRHRows(filtered);
   const rhSpan = ensureRHModCounter();
   rhSpan.textContent = `· módulos: ${rhCount} linha(s) RH`;
 
-  // KPIs só para LOG (sem renderizar cards/painel)
+  // KPIs apenas para LOG (não renderiza cards/painel)
   const kpi = KPIs.compute({ ds, de /*, units */ });
   console.info("[kpi.debug] resumo:", {
     linhas: kpi.rowsCount, unidades: kpi.unitsCount, amostra: kpi.sample
