@@ -1,5 +1,6 @@
 // ui.js — ponte com o State + contador RH + badge responsivo + filtros de data
 import { State } from "./state.js";
+import { KPIs } from "./features.js"; // <- certifique-se que o import está no topo do ui.js
 
 export const UI = (() => {
   // ---- utils ----
@@ -137,26 +138,36 @@ export const UI = (() => {
   }
 
   function refresh() {
-    const all = State.getData() || [];
-    const { ds, de } = getDateRangeFromDOM();
-    const filtered = filterByDate(all, ds, de);
+  const all = State.getData() || [];
+  const { ds, de } = getDateRangeFromDOM();
+  const filtered = filterByDate(all, ds, de);
 
-    const total = filtered.length;
-    const units = [...new Set(filtered.map(r => r.Unidade).filter(Boolean))];
-    const unitCount = units.length;
+  const total = filtered.length;
+  const units = [...new Set(filtered.map(r => r.Unidade).filter(Boolean))];
+  const unitCount = units.length;
 
-    console.info("[UI.refresh] dados (filtrados por data):", { total, ds, de, sample: filtered.slice(0,2) });
+  console.info("[UI.refresh] dados (filtrados por data):", { total, ds, de, sample: filtered.slice(0,2) });
 
-    // badge (agora mostrando totais filtrados)
-    const badge = ensureBadge();
-    badge.textContent = `Módulos OK · ${total} linha(s) · ${unitCount} unidade(s)`;
-    repositionBadge();
+  // badge (agora mostrando totais filtrados)
+  const badge = ensureBadge();
+  badge.textContent = `Módulos OK · ${total} linha(s) · ${unitCount} unidade(s)`;
+  repositionBadge();
 
-    // contador RH (módulos) — também filtrado por data
-    const rhCount = countRHRows(filtered);
-    const rhSpan = ensureRHModCounter();
-    rhSpan.textContent = `· módulos: ${rhCount} linha(s) RH`;
-  }
+  // contador RH (módulos) — também filtrado por data
+  const rhCount = countRHRows(filtered);
+  const rhSpan = ensureRHModCounter();
+  rhSpan.textContent = `· módulos: ${rhCount} linha(s) RH`;
+
+  // === NOVO: cálculo de KPIs e LOG (sem alterar UI) ===
+  const kpi = KPIs.compute({ ds, de /*, units */ });
+  console.info("[kpi.debug] resumo:", {
+    linhas: kpi.rowsCount, unidades: kpi.unitsCount, amostra: kpi.sample
+  });
+  console.info("[kpi.debug] HE total (h):", kpi.he_total, "— linhas válidas:", kpi.he_count);
+  console.info("[kpi.debug] Custo MOT total (R$):", kpi.custo_mot_total, "— linhas válidas:", kpi.custo_mot_count);
+  console.info("[kpi.debug] Turnover médio (%):", isNaN(kpi.turnover_avg_pct) ? "—" : kpi.turnover_avg_pct.toFixed(2));
+  console.info("[kpi.debug] Absenteísmo médio (%):", isNaN(kpi.abs_avg_pct) ? "—" : kpi.abs_avg_pct.toFixed(2));
+}
 
   return { init, refresh };
 })();
