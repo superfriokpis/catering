@@ -11,31 +11,74 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
-  --brand-primary:#1d4ed8; --brand-primary-dark:#1e40af; --brand-primary-light:#eff5ff;
-  --border:#e2e8f0; --surface:#ffffff; --muted:#f8fafc; --text:#0f172a; --sub:#475569;
-  --radius:.8rem; --shadow:0 1px 2px rgba(0,0,0,.06);
+  --brand-1:#1e40af; --brand-2:#2563eb; --brand-3:#3b82f6;
+  --ink:#0b1220; --sub:#5b677a; --muted:#f6f8fc; --line:#e6ebf2; --card:#ffffff;
+  --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+  --radius:18px; --shadow:0 8px 24px rgba(2,6,23,.10);
 }
-html,body{background:#f8fafc;color:var(--text);font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
-.container{max-width:1400px;margin-inline:auto;padding:18px;}
-.header{background:linear-gradient(90deg,var(--brand-primary-dark),var(--brand-primary));color:#fff;border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);}
-.header h1{font-size:18px;font-weight:700}
-.header p{font-size:12px;opacity:.9}
+html,body{background:linear-gradient(180deg,#f7f9ff 0%, #f2f6ff 40%, #eef4ff 100%); color:var(--ink);
+  font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
+.container{max-width:1420px;margin-inline:auto;padding:18px}
+/* ======= PREMIUM HEADER ======= */
+.header{
+  border-radius:24px; padding:18px 18px 14px;
+  background: radial-gradient(1200px 400px at 20% -80%, #5b8bff33 0%, transparent 60%) ,
+              linear-gradient(100deg, var(--brand-1), var(--brand-2) 40%, var(--brand-3));
+  color:#fff; box-shadow:var(--shadow); position:relative; overflow:hidden;
+}
+.header h1{font-size:20px;font-weight:800;letter-spacing:-.01em}
+.header p{font-size:12px;opacity:.95}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.toolbar label{font-size:12px}
-.toolbar input[type=date]{border:1px solid #e2e8f0;border-radius:10px;padding:6px 10px;font-size:14px;color:#0f172a;background:#fff;height:36px}
-.btn{border:1px solid #e2e8f0;background:#fff;border-radius:10px;padding:6px 10px;font-size:13px}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;box-shadow:var(--shadow)}
+.input{border:1px solid #FFFFFF40;background:#ffffff14;color:#fff;height:38px;
+  padding:6px 12px;border-radius:12px;font-size:14px;backdrop-filter:blur(2px)}
+.input::placeholder{color:#ffffffcc}
+.btn{border:1px solid #FFFFFF40;background:#ffffff1a;color:#fff;
+  border-radius:12px;padding:8px 12px;font-size:13px;display:inline-flex;gap:8px;align-items:center}
+.btn:hover{background:#ffffff29}
+/* metric chips */
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip{
+  background:#fff; color:var(--ink); border:1px solid #ffffffaa;
+  padding:8px 12px; border-radius:999px; font-size:12px; font-weight:600;
+  display:inline-flex; gap:8px; align-items:center;
+  box-shadow:0 10px 20px rgba(37,99,235,.12);
+}
+.chip svg{width:14px;height:14px;color:var(--brand-2)}
+/* ======= CARD & TABLE ======= */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card .hdr{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.meta{font-size:12px;color:var(--sub)}
+.meta strong{color:var(--brand-2)}
 .table-wrap{overflow:auto}
 table.kpi{width:100%;border-collapse:separate;border-spacing:0}
-table.kpi thead th{position:sticky;top:0;background:var(--brand-primary-dark);color:#fff;font-size:12px;padding:10px;text-align:center}
-table.kpi thead th:first-child{position:sticky;left:0;z-index:3}
-table.kpi tbody th{position:sticky;left:0;background:#fff;text-align:left;font-weight:700;color:#0f172a;border-right:1px solid #e2e8f0}
-table.kpi tbody td, table.kpi tbody th{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:12px;white-space:nowrap}
-table.kpi tbody tr:hover td{background:#f1f5fe}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid #e2e8f0;font-size:12px}
-.badge strong{color:#1d4ed8}
-.legend{display:flex;gap:8px;flex-wrap:wrap}
-.small{font-size:12px;color:#475569}
+/* sticky head */
+table.kpi thead th{
+  position:sticky;top:0;background:linear-gradient(180deg,var(--brand-2),var(--brand-1));
+  color:#fff;font-size:12px;padding:12px 10px;text-align:center;
+  letter-spacing:.2px;z-index:2;
+}
+table.kpi thead th:first-child{position:sticky;left:0;z-index:3;min-width:280px;text-align:left}
+/* sticky first col */
+table.kpi tbody th{
+  position:sticky;left:0;background:linear-gradient(90deg,#fff, #fff 60%, #f9fbff);
+  text-align:left;font-weight:700;color:#172036;border-right:1px solid var(--line);
+  padding:10px 12px;font-size:12px;z-index:1;
+}
+table.kpi tbody td{padding:12px 10px;border-bottom:1px solid var(--line);font-size:12px;text-align:right}
+table.kpi tbody tr:hover td{background:#f6f9ff}
+/* KPI group separators */
+.row-sep{background:#f1f5ff;font-weight:700;color:#26407f;border-bottom:1px solid var(--line)}
+/* number styling */
+.num{font-variant-numeric:tabular-nums}
+/* tiny legend under header */
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:#fff;opacity:.95;font-size:12px;margin-top:8px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid #FFFFFF40;background:#ffffff1a}
+.badge .dot{width:8px;height:8px;border-radius:999px;background:#fff}
+/* responsive improvements */
+@media(max-width:900px){
+  table.kpi thead th:first-child{min-width:240px}
+  .container{padding:12px}
+}
 </style>
 </head>
 <body>
@@ -44,25 +87,47 @@ table.kpi tbody tr:hover td{background:#f1f5fe}
       <div class="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1>Resumo do Dia — KPIs (Matriz)</h1>
-          <p>Visão por unidade, com Largada/Largada no horário/Ocupação do dia (D) e demais KPIs do D‑1 útil.</p>
+          <p>Visão por unidade com <strong>Largada</strong>/<strong>Largada no horário</strong>/<strong>Ocupação</strong> do <strong>dia (D)</strong> e os demais KPIs do <strong>D‑1 útil</strong>.</p>
+          <div class="chips mt-3">
+            <span class="chip" title="Valor do dia selecionado">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h10v4H4zm0 6h16v4H4zm0 6h12v4H4z"/></svg>
+              Largada Total (D)
+            </span>
+            <span class="chip" title="Valor do dia selecionado">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h4V7H4v4zm6 0h10V7H10v4zM4 21h16v-4H4v4z"/></svg>
+              Largada no horário (D)
+            </span>
+            <span class="chip" title="Valor do dia selecionado">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h18v2H3zm0 4h12v2H3zM3 9h14v2H3zM3 5h18v2H3z"/></svg>
+              Ocupação (D)
+            </span>
+          </div>
         </div>
         <div class="toolbar">
-          <label>Data
-            <input id="dateRef" type="date"/>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+            Data
+            <input id="dateRef" type="date" class="input" />
           </label>
-          <button id="btnHoje" class="btn" type="button">Hoje</button>
-          <button id="btnVoltar" class="btn" type="button">Voltar para o Dashboard</button>
+          <button id="btnHoje" class="btn" type="button" title="Ir para hoje">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2H5a2 2 0 00-2 2v1h18V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm14 7H3v11a2 2 0 002 2h14a2 2 0 002-2V9zm-9 2h2v5h-2v-5zm0 6h2v2h-2v-2z"/></svg>
+            Hoje
+          </button>
+          <button id="btnVoltar" class="btn" type="button" title="Voltar para o dashboard">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 19l-7-7 7-7v4h8v6h-8v4z"/></svg>
+            Voltar ao Dashboard
+          </button>
         </div>
       </div>
-      <div class="legend mt-3">
-        <span id="lblD" class="badge">Do dia (D): <strong>Largada Total</strong>, <strong>Largada no horário</strong>, <strong>Ocupação</strong></span>
-        <span id="lblD1" class="badge">Dia útil anterior (D‑1): Demais KPIs</span>
+      <div class="legend">
+        <span class="badge"><span class="dot"></span> Colunas (D): Largada Total, Largada no horário, Ocupação</span>
+        <span class="badge"><span class="dot"></span> Linhas (D‑1): Demais KPIs</span>
       </div>
     </div>
 
-    <div class="card mt-4">
-      <div class="p-3 border-b border-slate-200">
-        <div class="small"><strong>Data de referência:</strong> <span id="infoData">—</span> • <strong>D‑1 útil:</strong> <span id="infoDataD1">—</span></div>
+    <div class="card mt-5">
+      <div class="hdr">
+        <div class="meta"><strong>Data:</strong> <span id="infoData">—</span> &nbsp;•&nbsp; <strong>D‑1 útil:</strong> <span id="infoDataD1">—</span></div>
+        <div class="meta"><strong>Unidades:</strong> <span id="countUnits">—</span></div>
       </div>
       <div class="table-wrap p-2">
         <table class="kpi">
@@ -78,7 +143,7 @@ table.kpi tbody tr:hover td{background:#f1f5fe}
 const EXCEL_URL = "data/BI Operacional_Catering.xlsx";
 const EXCEL_SHEET = null; // primeira aba
 
-/* ===== Utils (compatíveis com seu dashboard atual) ===== */
+/* ===== Utils (compatíveis) ===== */
 const toISODateLocal=(y,m,d)=>`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 function parseDateRaw(s){
   if(!s) return new Date('invalid');
@@ -88,8 +153,7 @@ function parseDateRaw(s){
 }
 function asNumber(v){
   if(v===null||v===undefined) return '';
-  const s=String(v).trim();
-  if(s==='') return '';
+  const s=String(v).trim(); if(s==='') return '';
   const n=Number(s.replace(/R\\$\\s?/i,'').replace(/\\./g,'').replace(',','.').replace(/%/g,''));
   return Number.isFinite(n)?n:'';
 }
@@ -122,22 +186,18 @@ function normalizeRow(row){
   if(o["Turn over"]!==undefined && o["Turnover"]===undefined){ o["Turnover"]=o["Turn over"]; delete o["Turn over"]; }
   if(o["Indisponibilidade de Frota"]!==undefined && o["Indisponibilidade de Frota (%)"]===undefined) o["Indisponibilidade de Frota (%)"]=o["Indisponibilidade de Frota"];
   o["Data"]=asDateISO(o["Data"]);
-  // números
   Object.keys(o).forEach(k=>{
     if(PCT.has(k)) o[k]=normPct(o[k]);
     else if(MONEY.has(k) || INTLIKE.has(k) || TONS.has(k) || k==="Contagem cíclica"){
       const n=asNumber(o[k]); o[k]=(n===''||!Number.isFinite(n))?'':n;
     }
   });
-  // Volume total se não vier pronto
   if(o["Volume (tons)"]===''||o["Volume (tons)"]==null){
     const vin=asNumber(o["Volume In (tons)"])||0, vout=asNumber(o["Volume Out (tons)"])||0;
     o["Volume (tons)"]=(vin>0||vout>0)?(vin+vout):'';
   }
-  // HE total se vierem separadas
   const hea=asNumber(o["Horas Extras Armazém"]); const het=asNumber(o["Horas Extras Transporte"]);
   if(hea!=='' || het!==''){ o["HE armazém e transporte"]=(hea||0)+(het||0); }
-  // On-time calc
   const lt=asNumber(o["Largada (Total de veículos)"])||0, ln=asNumber(o["Largada (Veículos que saíram no horario)"])||0;
   o["% On-time (calc)"]=lt>0?(ln/lt)*100:'';
   return o;
@@ -206,11 +266,9 @@ function unitsSorted(){
   return Array.from(new Set(DATA.map(r=>r.Unidade))).filter(Boolean).sort();
 }
 
-function valueFor(unit, metric, iso, mode){
-  // mode: 'D' usa iso; 'D1' usa d1ISO (passado)
+function valueFor(unit, metric, iso){
   const list = DATA.filter(r=> r.Unidade===unit && r.Data===iso );
   if(!list.length) return '';
-  // soma ou média conforme métrica
   if(metric==="% On-time (calc)"){
     let lt=0, ln=0; list.forEach(r=>{ lt+=Number(r["Largada (Total de veículos)"])||0; ln+=Number(r["Largada (Veículos que saíram no horario)"])||0; });
     return lt>0? (ln/lt)*100 : '';
@@ -218,7 +276,6 @@ function valueFor(unit, metric, iso, mode){
   if(["Volume In (tons)","Volume Out (tons)","Corte (KG)","Paletes Pendentes","HE armazém e transporte","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Ocorrências em R$ D-1","Custo MOT (armazém e transporte)","Volume (tons)"].includes(metric)){
     return list.reduce((s,r)=> s + (Number(r[metric])||0), 0);
   }
-  // médias
   const nums = list.map(r=> Number(r[metric]) ).filter(v=> Number.isFinite(v));
   return nums.length? nums.reduce((a,b)=>a+b,0)/nums.length : '';
 }
@@ -229,29 +286,49 @@ function renderMatrix(iso){
   document.getElementById('infoDataD1').textContent = d1? d1.split('-').reverse().join('/') : '—';
 
   const units = unitsSorted();
+  document.getElementById('countUnits').textContent = units.length;
+
   const thead = document.getElementById('thead');
   const tbody = document.getElementById('tbody');
 
   // Cabeçalho
   const trh = document.createElement('tr');
-  const th0 = document.createElement('th'); th0.textContent='KPIs'; th0.style.minWidth='260px'; trh.appendChild(th0);
+  const th0 = document.createElement('th'); th0.textContent='KPIs'; trh.appendChild(th0);
   units.forEach(u=>{ const th=document.createElement('th'); th.textContent=u; trh.appendChild(th); });
   thead.innerHTML=''; thead.appendChild(trh);
 
-  // Linhas D (Largada/Largada no horário/Ocupação)
-  const rowsOrder = [...dayMetrics.map(m=>({m,mode:'D'})), ...d1Metrics.map(m=>({m,mode:'D1'}))];
   const frag = document.createDocumentFragment();
 
-  rowsOrder.forEach(({m,mode})=>{
+  // Grupo D
+  dayMetrics.forEach(m=>{
     const tr=document.createElement('tr');
-    const th=document.createElement('th');
-    th.innerHTML = (mode==='D' ? '( D ) ' : '( D‑1 ) ') + m;
-    tr.appendChild(th);
+    const th=document.createElement('th'); th.textContent = `( D ) ${m}`; tr.appendChild(th);
     units.forEach(u=>{
-      const td=document.createElement('td');
-      const val = valueFor(u, m, mode==='D' ? iso : d1, mode);
+      const td=document.createElement('td'); td.className='num';
+      const val = valueFor(u, m, iso);
       let txt='';
-      if(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"].includes(m)) txt = val===''?'':fmtPct(val);
+      if(["Ocupação"].includes(m)) txt = val===''?'':fmtPct(val);
+      else txt = fmtNum(val);
+      td.textContent = (txt===''?'—':txt);
+      tr.appendChild(td);
+    });
+    frag.appendChild(tr);
+  });
+
+  // Separador visual
+  const trSep=document.createElement('tr');
+  const thSep=document.createElement('th'); thSep.colSpan = units.length+1; thSep.textContent='KPIs (D‑1 útil)'; thSep.className='row-sep';
+  trSep.appendChild(thSep); frag.appendChild(trSep);
+
+  // Grupo D-1
+  d1Metrics.forEach(m=>{
+    const tr=document.createElement('tr');
+    const th=document.createElement('th'); th.textContent = `( D-1 ) ${m}`; tr.appendChild(th);
+    units.forEach(u=>{
+      const td=document.createElement('td'); td.className='num';
+      const val = valueFor(u, m, d1);
+      let txt='';
+      if(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)"].includes(m)) txt = val===''?'':fmtPct(val);
       else if(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"].includes(m)) txt = fmtMoney(val);
       else txt = fmtNum(val);
       td.textContent = (txt===''?'—':txt);
@@ -268,14 +345,11 @@ function renderMatrix(iso){
 async function init(){
   try{
     await loadExcelFromRepo();
-  }catch(e){
-    console.warn(e);
-  }
-  // Data padrão = hoje (mas se não houver dados de hoje, o usuário pode alterar)
-  const today = new Date();
-  const isoToday = toISODateLocal(today.getFullYear(),today.getMonth()+1,today.getDate());
-  dateRef.value = isoToday;
-  renderMatrix(isoToday);
+  }catch(e){ console.warn(e); }
+  const t = new Date();
+  const iso = toISODateLocal(t.getFullYear(),t.getMonth()+1,t.getDate());
+  dateRef.value = iso;
+  renderMatrix(iso);
 }
 
 const dateRef = document.getElementById('dateRef');
@@ -284,7 +358,6 @@ document.getElementById('btnHoje').addEventListener('click',()=>{
   dateRef.value=iso; renderMatrix(iso);
 });
 document.getElementById('btnVoltar').addEventListener('click',()=>{
-  // tenta ir para a página principal (mesmo host) / index.html
   location.href = location.origin + location.pathname.replace(/[^/]+$/,'') + 'index.html#arm';
 });
 dateRef.addEventListener('change',()=>{
