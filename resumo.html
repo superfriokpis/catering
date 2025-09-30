@@ -294,7 +294,7 @@
                   <table className="w-full border-separate border-spacing-0">
                     <thead>
                       <tr>
-                        <th className="sticky left-0 z-20 bg-gradient-to-r from-white to-white/95 text-left px-3 py-3 text-[11px] font-bold text-slate-800 border-b border-slate-200 min-w-[260px]">KPI</th>
+                        <th className="sticky left-0 z-20 bg-gradient-to-r from-white to-white/95 text-left px-3 py-3 text-[11px] font-bold text-slate-800 border-b border-slate-200 min-w-[260px] text-center">KPI</th>
                         {visibleUnits.map(u=> (
                           <th key={u} className="sticky top-0 z-10 bg-gradient-to-b from-blue-600 to-blue-700 text-white px-3 py-3 text-[11px] border-l border-white/20 text-center">{u}</th>
                         ))}
@@ -309,7 +309,7 @@
                           </tr>
                           {b.kpisD.filter(k=>k.toLowerCase().includes(query.toLowerCase())).map(kpi=> (
                             <tr key={kpi} className="hover:bg-slate-50/60">
-                              <th className="sticky left-0 bg-gradient-to-r from-white to-white/95 text-left px-3 py-2 text-[12px] font-semibold text-slate-800 border-b border-slate-200">{kpi}</th>
+                              <th className="sticky left-0 bg-gradient-to-r from-white to-white/95 text-left px-3 py-2 text-[12px] font-semibold text-slate-800 border-b border-slate-200 text-center">{kpi}</th>
                               {visibleUnits.map(u=>{
                                 const v = (dataMatrix?.[u]||{})[kpi]; const s = evalStatus(kpi,v);
                                 return <td key={u} className="text-right px-3 py-2 border-b border-slate-200 align-middle whitespace-nowrap"><ValueCell kpi={kpi} value={v} status={s}/></td>;
@@ -322,7 +322,7 @@
                           </tr>
                           {b.kpisD1.filter(k=>k.toLowerCase().includes(query.toLowerCase())).map(kpi=> (
                             <tr key={kpi} className="hover:bg-slate-50/60">
-                              <th className="sticky left-0 bg-gradient-to-r from-white to-white/95 text-left px-3 py-2 text-[12px] font-semibold text-slate-800 border-b border-slate-200">{kpi}</th>
+                              <th className="sticky left-0 bg-gradient-to-r from-white to-white/95 text-left px-3 py-2 text-[12px] font-semibold text-slate-800 border-b border-slate-200 text-center">{kpi}</th>
                               {visibleUnits.map(u=>{
                                 const v = (dataMatrix?.[u]||{})[kpi]; const s = evalStatus(kpi,v);
                                 return <td key={u} className="text-right px-3 py-2 border-b border-slate-200 align-middle whitespace-nowrap"><ValueCell kpi={kpi} value={v} status={s}/></td>;
@@ -355,7 +355,7 @@
       return (
         <div className="flex items-center justify-end gap-2">
           {/* subtle colored dot; tooltip holds label, but no text rendered */}
-          <span className={`inline-block w-2.5 h-2.5 rounded-full ${toneDot}`} title={status.label || ""}></span>
+          <span className={`inline-block w-2 h-2 rounded-full ${toneDot}`} aria-label={status.label || ""} title={status.label || ""}></span>
           <span className="tabular-nums">{text}</span>
         </div>
       );
