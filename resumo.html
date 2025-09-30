@@ -141,6 +141,11 @@ table.kpi tbody tr:hover td{background:#f6f9ff}
 <script>
 /* ===== CONFIG ===== */
 const EXCEL_URL = "data/BI Operacional_Catering.xlsx";
+const ALT_URLS = [
+  "./data/BI Operacional_Catering.xlsx",
+  "../data/BI Operacional_Catering.xlsx",
+  "./BI Operacional_Catering.xlsx",
+];
 const EXCEL_SHEET = null; // primeira aba
 
 /* ===== Utils (compatíveis) ===== */
@@ -223,7 +228,7 @@ function fmtNum(v){ return (v===''||v==null)?'':Number(v).toLocaleString('pt-BR'
 let DATA=[];
 async function loadExcelFromRepo(){
   const res = await fetch(EXCEL_URL,{cache:"no-store"});
-  if(!res.ok) throw new Error("Falha ao baixar planilha ("+res.status+")");
+  if(!res.ok) throw new Error("Falha ao baixar planilha. Você pode selecionar o arquivo acima (.xlsx) ("+res.status+")");
   const ab = await res.arrayBuffer();
   const wb = XLSX.read(ab,{type:'array'});
   const ws = wb.Sheets[EXCEL_SHEET] || wb.Sheets[wb.SheetNames[0]];
@@ -262,6 +267,12 @@ const d1Metrics = [
   "Ocorrências quantidade D-1","Ocorrências em R$ D-1","Indisponibilidade de Frota (%)"
 ];
 
+function selectedUnits(){
+  const sel=document.querySelector('select[min-w\\[220px\\]]')||document.querySelector('select');
+  if(!sel) return null;
+  const vals=Array.from(sel.selectedOptions||[]).map(o=>o.value);
+  return vals.length? vals : null;
+}
 function unitsSorted(){
   return Array.from(new Set(DATA.map(r=>r.Unidade))).filter(Boolean).sort();
 }
@@ -280,12 +291,16 @@ function valueFor(unit, metric, iso){
   return nums.length? nums.reduce((a,b)=>a+b,0)/nums.length : '';
 }
 
+let unitsPopulated=false;
 function renderMatrix(iso){
   const d1 = prevBusinessISO(iso);
   document.getElementById('infoData').textContent = iso.split('-').reverse().join('/');
   document.getElementById('infoDataD1').textContent = d1? d1.split('-').reverse().join('/') : '—';
 
-  const units = unitsSorted();
+  // populate select options once
+  const sel=document.querySelector('select');
+  if(sel && !unitsPopulated){ sel.innerHTML=''; unitsSorted().forEach(u=>{ const o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); }); unitsPopulated=true; }
+  const units = selectedUnits() || unitsSorted();
   document.getElementById('countUnits').textContent = units.length;
 
   const thead = document.getElementById('thead');
@@ -299,8 +314,10 @@ function renderMatrix(iso){
 
   const frag = document.createDocumentFragment();
 
+  const search=document.querySelector('input[placeholder^=Digite]');
+  const q=(search? search.value.toLowerCase(): '');
   // Grupo D
-  dayMetrics.forEach(m=>{
+  dayMetrics.filter(m=> m.toLowerCase().includes(q)).forEach(m=>{
     const tr=document.createElement('tr');
     const th=document.createElement('th'); th.textContent = `( D ) ${m}`; tr.appendChild(th);
     units.forEach(u=>{
@@ -320,8 +337,10 @@ function renderMatrix(iso){
   const thSep=document.createElement('th'); thSep.colSpan = units.length+1; thSep.textContent='KPIs (D‑1 útil)'; thSep.className='row-sep';
   trSep.appendChild(thSep); frag.appendChild(trSep);
 
+  const search=document.querySelector('input[placeholder^=Digite]');
+  const q=(search? search.value.toLowerCase(): '');
   // Grupo D-1
-  d1Metrics.forEach(m=>{
+  d1Metrics.filter(m=> m.toLowerCase().includes(q)).forEach(m=>{
     const tr=document.createElement('tr');
     const th=document.createElement('th'); th.textContent = `( D-1 ) ${m}`; tr.appendChild(th);
     units.forEach(u=>{
@@ -345,6 +364,18 @@ function renderMatrix(iso){
 async function init(){
   try{
     await loadExcelFromRepo();
+  const selUnits=document.querySelector('select');
+  if(selUnits){ selUnits.addEventListener('change',()=>{ const iso=document.getElementById('dateRef').value; renderMatrix(iso); }); }
+  const search=document.querySelector('input[placeholder^=Digite]');
+  if(search){ search.addEventListener('input',()=>{ const iso=document.getElementById('dateRef').value; renderMatrix(iso); }); }
+  const fileInput = document.getElementById('fileXlsx');
+  fileInput.addEventListener('change', async (e)=>{
+    const f=e.target.files?.[0]; if(!f) return;
+    const ab = await f.arrayBuffer();
+    const wb = XLSX.read(ab,{type:'array'});
+    parseWorkbookToData(wb);
+    const iso = document.getElementById('dateRef').value; renderMatrix(iso);
+  });
   }catch(e){ console.warn(e); }
   const t = new Date();
   const iso = toISODateLocal(t.getFullYear(),t.getMonth()+1,t.getDate());
