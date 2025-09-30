@@ -27,15 +27,24 @@
     const {useEffect,useMemo,useState,Fragment} = React;
 
     const META_RULES = {
-      "Ocupação": { target: 85, operator: ">=", type: "percent" },
-      "% On-time (calc)": { target: 95, operator: ">=", type: "percent" },
-      "ILA %": { target: 100, operator: ">=", type: "percent" },
-      "IRA %": { target: 100, operator: ">=", type: "percent" },
-      "IN FULL D-1": { target: 98, operator: ">=", type: "percent" },
-      "FILL RATE D-1": { target: 98, operator: ">=", type: "percent" },
-      "ON TIME D-1": { target: 95, operator: ">=", type: "percent" },
-      "Indisponibilidade de Frota (%)": { target: 5, operator: "<=", type: "percent" },
-    };
+  // Alvos do tipo ">="
+  "ON TIME D-1": { target: 99, operator: ">=", type: "percent" },
+  "% On-time (calc)": { target: 99, operator: ">=", type: "percent" },
+  "FILL RATE D-1": { target: 99, operator: ">=", type: "percent" },
+  "IN FULL D-1": { target: 99, operator: ">=", type: "percent" },
+  "Contagem cíclica": { target: 95, operator: ">=", type: "percent" },
+  "ILA %": { target: 99, operator: ">=", type: "percent" },
+  "IRA %": { target: 99, operator: ">=", type: "percent" },
+  "Ocupação": { target: 85, operator: ">=", type: "percent" },
+
+  // Alvos do tipo "<=" (máximos)
+  "Perdas (avarias e diferença de estoque)": { target: 8, operator: "<=", type: "percent" },
+  "Turnover": { target: 3, operator: "<=", type: "percent" },
+  "Absenteísmo": { target: 3, operator: "<=", type: "percent" },
+
+  // Mantidos (se existirem no dataset)
+  "Indisponibilidade de Frota (%)": { target: 5, operator: "<=", type: "percent" },
+};
 
     const BLOCKS = [
       { key:"transporte", title:"Transporte", kpisD:[
@@ -349,12 +358,12 @@
 
     function ValueCell({kpi,value,status}){
       const isMoney = kpi==="Ocorrências em R$ D-1" || kpi==="Custo MOT (armazém e transporte)";
-      const isPct = ["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)","Ocupação","% On-time (calc)"].includes(kpi);
+      const isPct = ["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)","Ocupação","% On-time (calc)","Contagem cíclica"].includes(kpi);
       const text = isMoney ? fmtMoney(value) : isPct ? fmtPct(value) : fmtNum(value);
       const toneDot = { none: "bg-slate-300", ok: "bg-emerald-500", warn: "bg-amber-500", bad: "bg-rose-500" }[status.tone] || "bg-slate-300";
       return (
         <div className="flex items-center justify-end gap-2">
-          <span className={`inline-block w-2 h-2 rounded-full ${toneDot}`} title={status.label || ""}></span>
+          <span className={`inline-block w-2 h-2 rounded-full ${toneDot}`} title={status.label || ""} aria-label={status.label || ""}></span>
           <span className="tabular-nums">{text}</span>
         </div>
       );
