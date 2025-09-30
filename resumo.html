@@ -1,408 +1,375 @@
 <!doctype html>
 <html lang="pt-br">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Resumo do Dia — KPIs</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<style>
-:root{
-  --brand-1:#1e40af; --brand-2:#2563eb; --brand-3:#3b82f6;
-  --ink:#0b1220; --sub:#5b677a; --muted:#f6f8fc; --line:#e6ebf2; --card:#ffffff;
-  --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
-  --radius:18px; --shadow:0 8px 24px rgba(2,6,23,.10);
-}
-html,body{background:linear-gradient(180deg,#f7f9ff 0%, #f2f6ff 40%, #eef4ff 100%); color:var(--ink);
-  font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
-.container{max-width:1420px;margin-inline:auto;padding:18px}
-/* ======= PREMIUM HEADER ======= */
-.header{
-  border-radius:24px; padding:18px 18px 14px;
-  background: radial-gradient(1200px 400px at 20% -80%, #5b8bff33 0%, transparent 60%) ,
-              linear-gradient(100deg, var(--brand-1), var(--brand-2) 40%, var(--brand-3));
-  color:#fff; box-shadow:var(--shadow); position:relative; overflow:hidden;
-}
-.header h1{font-size:20px;font-weight:800;letter-spacing:-.01em}
-.header p{font-size:12px;opacity:.95}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.input{border:1px solid #FFFFFF40;background:#ffffff14;color:#fff;height:38px;
-  padding:6px 12px;border-radius:12px;font-size:14px;backdrop-filter:blur(2px)}
-.input::placeholder{color:#ffffffcc}
-.btn{border:1px solid #FFFFFF40;background:#ffffff1a;color:#fff;
-  border-radius:12px;padding:8px 12px;font-size:13px;display:inline-flex;gap:8px;align-items:center}
-.btn:hover{background:#ffffff29}
-/* metric chips */
-.chips{display:flex;gap:10px;flex-wrap:wrap}
-.chip{
-  background:#fff; color:var(--ink); border:1px solid #ffffffaa;
-  padding:8px 12px; border-radius:999px; font-size:12px; font-weight:600;
-  display:inline-flex; gap:8px; align-items:center;
-  box-shadow:0 10px 20px rgba(37,99,235,.12);
-}
-.chip svg{width:14px;height:14px;color:var(--brand-2)}
-/* ======= CARD & TABLE ======= */
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-.card .hdr{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
-.meta{font-size:12px;color:var(--sub)}
-.meta strong{color:var(--brand-2)}
-.table-wrap{overflow:auto}
-table.kpi{width:100%;border-collapse:separate;border-spacing:0}
-/* sticky head */
-table.kpi thead th{
-  position:sticky;top:0;background:linear-gradient(180deg,var(--brand-2),var(--brand-1));
-  color:#fff;font-size:12px;padding:12px 10px;text-align:center;
-  letter-spacing:.2px;z-index:2;
-}
-table.kpi thead th:first-child{position:sticky;left:0;z-index:3;min-width:280px;text-align:left}
-/* sticky first col */
-table.kpi tbody th{
-  position:sticky;left:0;background:linear-gradient(90deg,#fff, #fff 60%, #f9fbff);
-  text-align:left;font-weight:700;color:#172036;border-right:1px solid var(--line);
-  padding:10px 12px;font-size:12px;z-index:1;
-}
-table.kpi tbody td{padding:12px 10px;border-bottom:1px solid var(--line);font-size:12px;text-align:right}
-table.kpi tbody tr:hover td{background:#f6f9ff}
-/* KPI group separators */
-.row-sep{background:#f1f5ff;font-weight:700;color:#26407f;border-bottom:1px solid var(--line)}
-/* number styling */
-.num{font-variant-numeric:tabular-nums}
-/* tiny legend under header */
-.legend{display:flex;gap:14px;flex-wrap:wrap;color:#fff;opacity:.95;font-size:12px;margin-top:8px}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid #FFFFFF40;background:#ffffff1a}
-.badge .dot{width:8px;height:8px;border-radius:999px;background:#fff}
-/* responsive improvements */
-@media(max-width:900px){
-  table.kpi thead th:first-child{min-width:240px}
-  .container{padding:12px}
-}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Resumo do Dia — KPIs (Premium)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    html,body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#f7f9ff 0%,#f2f6ff 40%,#eef4ff 100%);}
+    .shadow-premium{box-shadow:0 10px 30px rgba(2,6,23,.12)}
+    .chip{box-shadow:0 10px 20px rgba(37,99,235,.12)}
+    .tabular-nums{font-variant-numeric:tabular-nums}
+  </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1>Resumo do Dia — KPIs (Matriz)</h1>
-          <p>Visão por unidade com <strong>Largada</strong>/<strong>Largada no horário</strong>/<strong>Ocupação</strong> do <strong>dia (D)</strong> e os demais KPIs do <strong>D‑1 útil</strong>.</p>
-          <div class="chips mt-3">
-            <span class="chip" title="Valor do dia selecionado">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 4h10v4H4zm0 6h16v4H4zm0 6h12v4H4z"/></svg>
-              Largada Total (D)
-            </span>
-            <span class="chip" title="Valor do dia selecionado">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h4V7H4v4zm6 0h10V7H10v4zM4 21h16v-4H4v4z"/></svg>
-              Largada no horário (D)
-            </span>
-            <span class="chip" title="Valor do dia selecionado">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h18v2H3zm0 4h12v2H3zM3 9h14v2H3zM3 5h18v2H3z"/></svg>
-              Ocupação (D)
-            </span>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const {useEffect,useMemo,useState,Fragment} = React;
+
+    const META_RULES = {
+      "Ocupação": { target: 85, operator: ">=", type: "percent" },
+      "% On-time (calc)": { target: 95, operator: ">=", type: "percent" },
+      "ILA %": { target: 95, operator: ">=", type: "percent" },
+      "IRA %": { target: 95, operator: ">=", type: "percent" },
+      "IN FULL D-1": { target: 98, operator: ">=", type: "percent" },
+      "FILL RATE D-1": { target: 98, operator: ">=", type: "percent" },
+      "ON TIME D-1": { target: 95, operator: ">=", type: "percent" },
+      "Indisponibilidade de Frota (%)": { target: 5, operator: "<=", type: "percent" },
+    };
+
+    const BLOCKS = [
+      { key:"transporte", title:"Transporte", kpisD:[
+          "Largada (Total de veículos)",
+          "Largada (Veículos que saíram no horario)",
+        ], kpisD1:[
+          "Reentrega","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)",
+          "Indisponibilidade de Frota (%)","Ocorrências quantidade D-1","Ocorrências em R$ D-1",
+          "Custo MOT (armazém e transporte)",
+      ]},
+      { key:"armazem", title:"Armazém", kpisD:["Ocupação"], kpisD1:[
+          "Volume In (tons)","Volume Out (tons)","Volume (tons)","Corte (KG)","Contagem cíclica",
+          "Paletes Pendentes","Perdas (avarias e diferença de estoque)",
+          "HE armazém e transporte","ILA %","IRA %",
+      ]},
+      { key:"rh", title:"RH", kpisD:[], kpisD1:["Turnover","Absenteísmo"]},
+    ];
+    const DAY_METRICS = ["Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Ocupação"];
+
+    const toISO = (d)=>{
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), dd=String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${dd}`;
+    };
+    const parseDateCell = (v)=>{
+      if (v==null||v==="") return "";
+      if (typeof v==="number" && window.XLSX){
+        const d = XLSX.SSF.parse_date_code(v); if(!d) return "";
+        return toISO(new Date(d.y,d.m-1,d.d));
+      }
+      const s=String(v).trim();
+      const m=s.match(/^(\d{2})[./](\d{2})[./](\d{4})$/);
+      if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+      const dt=new Date(s); return isNaN(dt)?"":toISO(dt);
+    };
+    const pct=(v)=> v===""||v==null?"":Number(String(v).replace("%","").replace(",","."));
+    const num=(v)=>{
+      if (v===null||v===undefined||v==="") return "";
+      const n=Number(String(v).replace(/R\$\s?/i,"").replace(/\./g,"").replace(",",".").replace(/%/g,""));
+      return Number.isFinite(n)?n:"";
+    };
+    const fmtNum=(v)=> (v===""||v==null?"—":Number(v).toLocaleString("pt-BR"));
+    const fmtPct=(v)=> (v===""||v==null?"—":`${Number(v).toFixed(1).replace(".",",")}%`);
+    const fmtMoney=(v)=> (v===""||v==null?"—":Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0}));
+
+    function evalStatus(kpi, rawValue){
+      if (rawValue===""||rawValue==null) return {tone:"none", label:"Sem dado"};
+      const rule=META_RULES[kpi]; if(!rule) return {tone:"none",label:"—"};
+      const v=Number(rawValue); if(!Number.isFinite(v)) return {tone:"none",label:"—"};
+      const {target,operator} = rule; const tol = rule.type==="percent"?3:0;
+      if (operator!=="<=") { // >=
+        if (v>=target) return {tone:"ok",label:"Atingiu"};
+        if (v>=target - tol) return {tone:"warn",label:"Quase"};
+        return {tone:"bad",label:"Abaixo"};
+      } else {
+        if (v<=target) return {tone:"ok",label:"Atingiu"};
+        if (v<=target + tol) return {tone:"warn",label:"Quase"};
+        return {tone:"bad",label:"Acima"};
+      }
+    }
+
+    function getPrevBusinessDateISO(allDatesISO, refISO){
+      const ref=new Date(refISO);
+      for(let i=1;i<=10;i++){
+        const d=new Date(ref.getFullYear(),ref.getMonth(),ref.getDate()-i);
+        const wd=d.getDay(); if(wd===0||wd===6) continue;
+        const iso=toISO(d);
+        if (allDatesISO.has(iso)) return iso;
+      }
+      return null;
+    }
+
+    function normalizeRow(row){
+      const o={}; for (const k in row) o[String(k).trim()] = row[k];
+      if (o["Turn over"]!==undefined && o["Turnover"]===undefined){ o["Turnover"]=o["Turn over"]; delete o["Turn over"]; }
+      if (o["Indisponibilidade de Frota"]!==undefined && o["Indisponibilidade de Frota (%)"]===undefined) o["Indisponibilidade de Frota (%)"]=o["Indisponibilidade de Frota"];
+      o["Data"]=parseDateCell(o["Data"]);
+      const PCT=new Set(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"]);
+      const INTLIKE=new Set(["Paletes Pendentes","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Horas Extras Armazém","Horas Extras Transporte"]);
+      const MONEY=new Set(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"]);
+      const TONS=new Set(["Volume In (tons)","Volume Out (tons)","Volume (tons)"]);
+      for (const k of Object.keys(o)){
+        if (PCT.has(k)) o[k]=pct(o[k]);
+        else if (MONEY.has(k) || INTLIKE.has(k) || TONS.has(k) || k==="Contagem cíclica") o[k]=num(o[k]);
+      }
+      if (o["Volume (tons)"]===""||o["Volume (tons)"]==null){
+        const vin=num(o["Volume In (tons)"])||0, vout=num(o["Volume Out (tons)"])||0;
+        o["Volume (tons)"]= (vin>0||vout>0)? (vin+vout) : "";
+      }
+      const hea=num(o["Horas Extras Armazém"]), het=num(o["Horas Extras Transporte"]);
+      if (hea!=="" || het!=="") o["HE armazém e transporte"]=(hea||0)+(het||0);
+      const lt=num(o["Largada (Total de veículos)"])||0, ln=num(o["Largada (Veículos que saíram no horario)"])||0;
+      o["% On-time (calc)"]= lt>0? (ln/lt)*100 : "";
+      return o;
+    }
+
+    function isRowAllBlank(o){
+      if (!o["Unidade"]||!o["Data"]) return true;
+      const keys=["Volume In (tons)","Volume Out (tons)","Corte (KG)","Contagem cíclica","ILA %","IRA %","Paletes Pendentes","Perdas (avarias e diferença de estoque)","HE armazém e transporte","Turnover","Absenteísmo","Custo MOT (armazém e transporte)","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Volume (tons)","Ocupação","Reentrega","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Ocorrências quantidade D-1","Ocorrências em R$ D-1","Indisponibilidade de Frota (%)"];
+      for (const k of keys){ const v=o[k]; if (v!=="" && Number(v)!==0) return false; } return true;
+    }
+
+    function ValueCell({kpi,value,status}){
+      const isMoney = kpi==="Ocorrências em R$ D-1" || kpi==="Custo MOT (armazém e transporte)";
+      const isPct = ["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)","Ocupação","% On-time (calc)"].includes(kpi);
+      const text = isMoney ? fmtMoney(value) : isPct ? fmtPct(value) : fmtNum(value);
+      const toneMap = { none: "bg-slate-200 text-slate-700 border-slate-300", ok: "bg-emerald-100 text-emerald-700 border-emerald-200", warn: "bg-amber-100 text-amber-800 border-amber-200", bad: "bg-rose-100 text-rose-700 border-rose-200" };
+      return (
+        <div className="flex items-center justify-end gap-2">
+          <span className={`px-2 py-1 rounded-md border text-[10px] ${toneMap[status.tone]}`}>{status.label}</span>
+          <span className="tabular-nums">{text}</span>
+        </div>
+      );
+    }
+
+    function ResumoPremium({ excelUrl = "data/BI Operacional_Catering.xlsx", sheetName = null, initialDate = toISO(new Date()) }){
+      const [raw,setRaw] = React.useState([]);
+      const [dateRef,setDateRef] = React.useState(initialDate);
+      const [unitsFilter,setUnitsFilter] = React.useState([]);
+      const [query,setQuery] = React.useState("");
+      const [onlyBlocks,setOnlyBlocks] = React.useState({transporte:true, armazem:true, rh:true});
+      const [loading,setLoading] = React.useState(false);
+      const [error,setError] = React.useState("");
+
+      const ALT_URLS = [excelUrl, "./"+excelUrl, "../"+excelUrl, excelUrl.replace("data/","")];
+      const queryExcel = () => new URL(location.href).searchParams.get("excel");
+      async function fetchArrayBufferWithFallback(){
+        const list = [queryExcel(), ...ALT_URLS].filter(Boolean);
+        for (const u of list){
+          try{ const res = await fetch(u,{cache:"no-store"}); if(res.ok) return await res.arrayBuffer(); }catch(e){}
+        }
+        throw new Error("Falha ao baixar planilha (404). Use o seletor de arquivo no topo.");
+      }
+
+      React.useEffect(()=>{
+        let live=true;
+        (async()=>{
+          setLoading(true); setError("");
+          try{
+            const ab = await fetchArrayBufferWithFallback();
+            const wb = XLSX.read(ab,{type:"array"});
+            const ws = wb.Sheets[sheetName || wb.SheetNames[0]];
+            const ref = XLSX.utils.decode_range(ws['!ref']); ref.s.r=Math.max(ref.s.r,2); ref.s.c=Math.max(ref.s.c,1);
+            const newRef = XLSX.utils.encode_range(ref);
+            let rows = XLSX.utils.sheet_to_json(ws,{defval:"",range:newRef});
+            rows = rows.map(normalizeRow).filter(o=>!isRowAllBlank(o));
+            if(live) setRaw(rows);
+          }catch(err){ if(live) setError(String(err.message||err)); }
+          finally{ if(live) setLoading(false); }
+        })();
+        return ()=>{ live=false; }
+      },[excelUrl,sheetName]);
+
+      const units = React.useMemo(()=> Array.from(new Set(raw.map(r=>r.Unidade))).filter(Boolean).sort(), [raw]);
+      const allDates = React.useMemo(()=> new Set(raw.map(r=>r.Data)), [raw]);
+      const d1ISO = React.useMemo(()=> getPrevBusinessDateISO(allDates, dateRef), [allDates,dateRef]);
+      const visibleUnits = React.useMemo(()=> (unitsFilter.length ? unitsFilter : units), [unitsFilter,units]);
+
+      const dataMatrix = React.useMemo(()=>{
+        const byUnitMetric={};
+        const getVal=(unit,metric,iso)=>{
+          const list = raw.filter(r=> r.Unidade===unit && r.Data===iso );
+          if (!list.length) return "";
+          if (["Volume In (tons)","Volume Out (tons)","Corte (KG)","Paletes Pendentes","HE armazém e transporte","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Ocorrências em R$ D-1","Custo MOT (armazém e transporte)","Volume (tons)"].includes(metric)){
+            return list.reduce((s,r)=> s + (Number(r[metric])||0), 0);
+          }
+          if (metric==="% On-time (calc)"){ let lt=0,ln=0; list.forEach(r=>{ lt+=Number(r["Largada (Total de veículos)"])||0; ln+=Number(r["Largada (Veículos que saíram no horario)"])||0; }); return lt>0? (ln/lt)*100 : ""; }
+          const nums = list.map(r=> Number(r[metric]) ).filter(v=> Number.isFinite(v));
+          return nums.length? nums.reduce((a,b)=>a+b,0)/nums.length : "";
+        };
+        for (const u of visibleUnits){
+          byUnitMetric[u] = {};
+          for (const m of DAY_METRICS) byUnitMetric[u][m] = getVal(u,m,dateRef);
+          const others = new Set([ ...BLOCKS.find(b=>b.key==="transporte").kpisD1, ...BLOCKS.find(b=>b.key==="armazem").kpisD1, ...BLOCKS.find(b=>b.key==="rh").kpisD1, "% On-time (calc)" ]);
+          for (const m of others) byUnitMetric[u][m] = getVal(u,m,d1ISO);
+        }
+        return byUnitMetric;
+      },[raw,visibleUnits,dateRef,d1ISO]);
+
+      React.useEffect(()=>{
+        const input = document.getElementById("fileXlsx");
+        if (!input) return;
+        const onChange = async (e)=>{
+          const f=e.target.files?.[0]; if(!f) return;
+          setLoading(true); setError("");
+          try{
+            const ab = await f.arrayBuffer();
+            const wb = XLSX.read(ab,{type:"array"});
+            const ws = wb.Sheets[sheetName || wb.SheetNames[0]];
+            const ref = XLSX.utils.decode_range(ws['!ref']); ref.s.r=Math.max(ref.s.r,2); ref.s.c=Math.max(ref.s.c,1);
+            const newRef = XLSX.utils.encode_range(ref);
+            let rows = XLSX.utils.sheet_to_json(ws,{defval:"",range:newRef});
+            rows = rows.map(normalizeRow).filter(o=>!isRowAllBlank(o));
+            setRaw(rows);
+          }catch(err){ setError(String(err.message||err)); }
+          finally{ setLoading(false); }
+        };
+        input.addEventListener('change', onChange);
+        return ()=> input.removeEventListener('change', onChange);
+      },[]);
+
+      const filteredBlocks = React.useMemo(()=> BLOCKS.filter(b=> onlyBlocks[b.key]), [onlyBlocks]);
+      const selectedUnits = (unitsFilter.length?unitsFilter:units);
+      return (
+        <div className="min-h-screen text-[13px] text-slate-900">
+          <div className="mx-auto max-w-[1420px] p-4 mt-4 rounded-2xl text-white shadow-premium"
+               style={{background:"radial-gradient(1200px 400px at 20% -80%, #5b8bff33 0%, transparent 60%), linear-gradient(100deg, #1e40af, #2563eb 40%, #3b82f6)"}}>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h1 className="text-xl font-extrabold tracking-tight">Resumo do Dia — KPIs</h1>
+                <p className="text-xs/5 opacity-95">Largada &amp; Ocupação do <b>Dia (D)</b>. Demais KPIs por <b>D-1 útil</b>. Filtros por unidade e busca por KPI.</p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {DAY_METRICS.map(m=> (
+                    <span key={m} className="chip inline-flex items-center gap-2 rounded-full bg-white text-slate-900 text-[11px] font-semibold px-3 py-2">
+                      <span className="w-2 h-2 rounded-full bg-white/70 border border-white"></span>{m} (D)
+                    </span>
+                  ))}
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white/15 border border-white/30 text-white text-[11px] font-medium px-3 py-2">Linhas (D-1): demais KPIs</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex flex-col gap-1 text-xs">
+                  Data
+                  <input type="date" value={dateRef} onChange={e=>setDateRef(e.target.value)}
+                         className="h-9 rounded-xl border border-white/40 bg-white/10 text-white px-3 backdrop-blur-sm placeholder-white/70"/>
+                </label>
+                <button onClick={()=>setDateRef(toISO(new Date()))}
+                        className="h-9 rounded-xl border border-white/40 bg-white/15 px-3 text-xs hover:bg-white/25">Hoje</button>
+                <div className="w-[1px] h-9 bg-white/30 mx-1"/>
+                <div className="flex items-center gap-2 text-xs">
+                  {BLOCKS.map(b=> (
+                    <label key={b.key} className="inline-flex items-center gap-2">
+                      <input type="checkbox" checked={onlyBlocks[b.key]} onChange={e=>setOnlyBlocks(s=>({...s,[b.key]:e.target.checked}))}/>
+                      <span className="select-none">{b.title}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
+              <div className="text-white/90"><b>Data:</b> {new Date(dateRef).toLocaleDateString("pt-BR")} • <b>D-1 útil:</b> {React.useMemo(()=>d1ISO? new Date(d1ISO).toLocaleDateString("pt-BR") : "—",[d1ISO])}</div>
+              <div className="text-white/90">• <b>Unidades:</b> {units.length || "—"}</div>
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-[1420px] mt-4 px-4">
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-slate-600">Unidades:</span>
+                <select multiple value={unitsFilter}
+                        onChange={(e)=> setUnitsFilter(Array.from(e.target.selectedOptions).map(o=>o.value))}
+                        className="min-w-[220px] h-10 rounded-xl border border-slate-300 bg-white px-3">
+                  {units.map(u=> <option key={u} value={u}>{u}</option>)}
+                </select>
+                {!!unitsFilter.length && (
+                  <button onClick={()=>setUnitsFilter([])} className="text-xs px-3 h-8 rounded-lg border border-slate-300 hover:bg-slate-50">Limpar</button>
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-slate-600">Buscar KPI:</span>
+                <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Digite parte do nome…"
+                       className="h-10 rounded-xl border border-slate-300 bg-white px-3 min-w-[260px]"/>
+              </div>
+              <div className="flex items-center gap-2 text-xs ml-auto">
+                <span className="text-slate-600">Planilha:</span>
+                <input id="fileXlsx" type="file" accept=".xlsx"
+                       className="h-10 rounded-xl border border-slate-300 bg-white px-3"/>
+              </div>
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-[1420px] px-4 mt-4">
+            {!!error && <div className="rounded-xl border border-rose-300 bg-rose-50 text-rose-700 p-3 text-sm">{error}</div>}
+            {loading ? (
+              <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-premium text-slate-600 text-sm">Carregando…</div>
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-white shadow-premium">
+                <div className="px-4 py-3 border-b border-slate-200 text-slate-600 text-xs">Dica: clique no título da coluna para fixar a primeira coluna e navegar horizontalmente.</div>
+                <div className="overflow-auto p-2">
+                  <table className="w-full border-separate border-spacing-0">
+                    <thead>
+                      <tr>
+                        <th className="sticky left-0 z-20 bg-gradient-to-r from-white to-white/95 text-left px-3 py-3 text-[11px] font-bold text-slate-800 border-b border-slate-200 min-w-[260px]">KPI</th>
+                        {selectedUnits.map(u=> (
+                          <th key={u} className="sticky top-0 z-10 bg-gradient-to-b from-blue-600 to-blue-700 text-white px-3 py-3 text-[11px] border-l border-white/20">{u}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {BLOCKS.filter(b=>onlyBlocks[b.key]).map(b=>(
+                        <Fragment key={b.key}>
+                          <tr>
+                            <td colSpan={selectedUnits.length + 1}
+                                className="bg-slate-50 text-slate-700 font-semibold text-xs px-3 py-2 border-y border-slate-200">{b.title} — (D)</td>
+                          </tr>
+                          {b.kpisD.filter(k=>k.toLowerCase().includes(query.toLowerCase())).map(kpi=> (
+                            <tr key={kpi} className="hover:bg-slate-50/60">
+                              <th className="sticky left-0 bg-gradient-to-r from-white to-white/95 text-left px-3 py-2 text-[12px] font-semibold text-slate-800 border-b border-slate-200">{kpi}</th>
+                              {selectedUnits.map(u=>{
+                                const v = (dataMatrix?.[u]||{})[kpi]; const s = evalStatus(kpi,v);
+                                return <td key={u} className="text-right px-3 py-2 border-b border-slate-200 align-middle whitespace-nowrap"><ValueCell kpi={kpi} value={v} status={s}/></td>;
+                              })}
+                            </tr>
+                          ))}
+                          <tr>
+                            <td colSpan={selectedUnits.length + 1}
+                                className="bg-indigo-50/80 text-indigo-800 font-semibold text-xs px-3 py-2 border-y border-slate-200">{b.title} — (D-1 útil)</td>
+                          </tr>
+                          {b.kpisD1.filter(k=>k.toLowerCase().includes(query.toLowerCase())).map(kpi=> (
+                            <tr key={kpi} className="hover:bg-slate-50/60">
+                              <th className="sticky left-0 bg-gradient-to-r from-white to-white/95 text-left px-3 py-2 text-[12px] font-semibold text-slate-800 border-b border-slate-200">{kpi}</th>
+                              {selectedUnits.map(u=>{
+                                const v = (dataMatrix?.[u]||{})[kpi]; const s = evalStatus(kpi,v);
+                                return <td key={u} className="text-right px-3 py-2 border-b border-slate-200 align-middle whitespace-nowrap"><ValueCell kpi={kpi} value={v} status={s}/></td>;
+                              })}
+                            </tr>
+                          ))}
+                        </Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mx-auto max-w-[1420px] px-4 py-6 flex items-center justify-between text-xs text-slate-500">
+            <div>Resumo premium — React + Tailwind + XLSX</div>
+            <button className="px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50"
+                    onclick="if(history.length>1) history.back(); else window.close();">Voltar</button>
           </div>
         </div>
-        <div class="toolbar">
-          <label style="display:flex;flex-direction:column;gap:6px;font-size:12px">
-            Data
-            <input id="dateRef" type="date" class="input" />
-          </label>
-          <button id="btnHoje" class="btn" type="button" title="Ir para hoje">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2H5a2 2 0 00-2 2v1h18V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm14 7H3v11a2 2 0 002 2h14a2 2 0 002-2V9zm-9 2h2v5h-2v-5zm0 6h2v2h-2v-2z"/></svg>
-            Hoje
-          </button>
-          <button id="btnVoltar" class="btn" type="button" title="Voltar para o dashboard">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 19l-7-7 7-7v4h8v6h-8v4z"/></svg>
-            Voltar ao Dashboard
-          </button>
-        </div>
-      </div>
-      <div class="legend">
-        <span class="badge"><span class="dot"></span> Colunas (D): Largada Total, Largada no horário, Ocupação</span>
-        <span class="badge"><span class="dot"></span> Linhas (D‑1): Demais KPIs</span>
-      </div>
-    </div>
-
-    <div class="card mt-5">
-      <div class="hdr">
-        <div class="meta"><strong>Data:</strong> <span id="infoData">—</span> &nbsp;•&nbsp; <strong>D‑1 útil:</strong> <span id="infoDataD1">—</span></div>
-        <div class="meta"><strong>Unidades:</strong> <span id="countUnits">—</span></div>
-      </div>
-      <div class="table-wrap p-2">
-        <table class="kpi">
-          <thead id="thead"></thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-<script>
-/* ===== CONFIG ===== */
-const EXCEL_URL = "data/BI Operacional_Catering.xlsx";
-const ALT_URLS = [
-  "./data/BI Operacional_Catering.xlsx",
-  "../data/BI Operacional_Catering.xlsx",
-  "./BI Operacional_Catering.xlsx",
-];
-const EXCEL_SHEET = null; // primeira aba
-
-/* ===== Utils (compatíveis) ===== */
-const toISODateLocal=(y,m,d)=>`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-function parseDateRaw(s){
-  if(!s) return new Date('invalid');
-  const iso=String(s).match(/^(\\d{4})-(\\d{2})-(\\d{2})$/); if(iso) return new Date(+iso[1],+iso[2]-1,+iso[3]);
-  const dmY=String(s).match(/^(\\d{2})[./](\\d{2})[./](\\d{4})$/); if(dmY) return new Date(+dmY[3],+dmY[2]-1,+dmY[1]);
-  return new Date(s);
-}
-function asNumber(v){
-  if(v===null||v===undefined) return '';
-  const s=String(v).trim(); if(s==='') return '';
-  const n=Number(s.replace(/R\\$\\s?/i,'').replace(/\\./g,'').replace(',','.').replace(/%/g,''));
-  return Number.isFinite(n)?n:'';
-}
-function normPct(v){
-  if(v===''||v==null) return '';
-  let n=Number(String(v).replace('%','').replace(/\\s/g,'').replace(',','.'));
-  if(!Number.isFinite(n)) return '';
-  if(n>0 && n<=1) return n*100;
-  if(n<=100) return n;
-  while(n>100) n/=10;
-  return n;
-}
-function asDateISO(v){
-  if(v==null||v==='') return '';
-  if(typeof v==='number'){
-    const d=XLSX.SSF.parse_date_code(v); if(!d) return '';
-    return toISODateLocal(d.y,d.m,d.d);
-  }
-  const s=String(v).trim();
-  const m=s.match(/^(\\d{2})[./](\\d{2})[./](\\d{4})$/); if(m) return toISODateLocal(+m[3],+m[2],+m[1]);
-  const dt=new Date(s); return isNaN(dt)?'':toISODateLocal(dt.getFullYear(),dt.getMonth()+1,dt.getDate());
-}
-const PCT=new Set(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"]);
-const INTLIKE=new Set(["Paletes Pendentes","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Horas Extras Armazém","Horas Extras Transporte"]);
-const MONEY=new Set(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"]);
-const TONS=new Set(["Volume In (tons)","Volume Out (tons)","Volume (tons)"]);
-function normalizeRow(row){
-  const o={};
-  for(const k in row){ const key=String(k).trim(); o[key]=row[k]; }
-  if(o["Turn over"]!==undefined && o["Turnover"]===undefined){ o["Turnover"]=o["Turn over"]; delete o["Turn over"]; }
-  if(o["Indisponibilidade de Frota"]!==undefined && o["Indisponibilidade de Frota (%)"]===undefined) o["Indisponibilidade de Frota (%)"]=o["Indisponibilidade de Frota"];
-  o["Data"]=asDateISO(o["Data"]);
-  Object.keys(o).forEach(k=>{
-    if(PCT.has(k)) o[k]=normPct(o[k]);
-    else if(MONEY.has(k) || INTLIKE.has(k) || TONS.has(k) || k==="Contagem cíclica"){
-      const n=asNumber(o[k]); o[k]=(n===''||!Number.isFinite(n))?'':n;
+      );
     }
-  });
-  if(o["Volume (tons)"]===''||o["Volume (tons)"]==null){
-    const vin=asNumber(o["Volume In (tons)"])||0, vout=asNumber(o["Volume Out (tons)"])||0;
-    o["Volume (tons)"]=(vin>0||vout>0)?(vin+vout):'';
-  }
-  const hea=asNumber(o["Horas Extras Armazém"]); const het=asNumber(o["Horas Extras Transporte"]);
-  if(hea!=='' || het!==''){ o["HE armazém e transporte"]=(hea||0)+(het||0); }
-  const lt=asNumber(o["Largada (Total de veículos)"])||0, ln=asNumber(o["Largada (Veículos que saíram no horario)"])||0;
-  o["% On-time (calc)"]=lt>0?(ln/lt)*100:'';
-  return o;
-}
-function isRowAllBlank(o){
-  if(!o["Unidade"]||!o["Data"]) return true;
-  const keys = [
-    "Volume In (tons)","Volume Out (tons)","Corte (KG)","Contagem cíclica","ILA %","IRA %",
-    "Paletes Pendentes","Perdas (avarias e diferença de estoque)","HE armazém e transporte",
-    "Turnover","Absenteísmo","Custo MOT (armazém e transporte)","Largada (Total de veículos)",
-    "Largada (Veículos que saíram no horario)","Volume (tons)","Ocupação","Reentrega",
-    "ON TIME D-1","IN FULL D-1","FILL RATE D-1","Ocorrências quantidade D-1","Ocorrências em R$ D-1",
-    "Indisponibilidade de Frota (%)"
-  ];
-  for(const k of keys){ const v=o[k]; if(v!=='' && Number(v)!==0) return false; }
-  return true;
-}
-function fmtPct(v){ return (v===''||v==null)?'':(Number(v).toFixed(1).replace('.',',')+'%'); }
-function fmtMoney(v){ return (v===''||v==null)?'':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}); }
-function fmtNum(v){ return (v===''||v==null)?'':Number(v).toLocaleString('pt-BR'); }
 
-/* ===== Carregamento ===== */
-let DATA=[];
-async function loadExcelFromRepo(){
-  const res = await fetch(EXCEL_URL,{cache:"no-store"});
-  if(!res.ok) throw new Error("Falha ao baixar planilha. Você pode selecionar o arquivo acima (.xlsx) ("+res.status+")");
-  const ab = await res.arrayBuffer();
-  const wb = XLSX.read(ab,{type:'array'});
-  const ws = wb.Sheets[EXCEL_SHEET] || wb.Sheets[wb.SheetNames[0]];
-  const ref = XLSX.utils.decode_range(ws['!ref']); ref.s.r=Math.max(ref.s.r,2); ref.s.c=Math.max(ref.s.c,1);
-  const newRef=XLSX.utils.encode_range(ref);
-  let rows = XLSX.utils.sheet_to_json(ws,{defval:"",range:newRef});
-  rows = rows.map(normalizeRow).filter(o=>!isRowAllBlank(o));
-  DATA = rows;
-}
-
-/* ===== Datas D e D-1 útil ===== */
-function prevBusinessISO(refISO){
-  if(!refISO) return null;
-  const ref=parseDateRaw(refISO);
-  for(let i=1;i<=10;i++){
-    const d=new Date(ref.getFullYear(),ref.getMonth(),ref.getDate()-i);
-    const wd=d.getDay(); if(wd===0||wd===6) continue;
-    const iso=toISODateLocal(d.getFullYear(),d.getMonth()+1,d.getDate());
-    const has = DATA.some(r=> r.Data===iso );
-    if(has) return iso;
-  }
-  return null;
-}
-
-/* ===== Matriz ===== */
-const dayMetrics = [
-  "Largada (Total de veículos)",
-  "Largada (Veículos que saíram no horario)",
-  "Ocupação"
-];
-const d1Metrics = [
-  "Volume In (tons)","Volume Out (tons)","Corte (KG)","Contagem cíclica",
-  "ILA %","IRA %","Paletes Pendentes","Perdas (avarias e diferença de estoque)",
-  "HE armazém e transporte","Turnover","Absenteísmo","Custo MOT (armazém e transporte)",
-  "Volume (tons)","Reentrega","ON TIME D-1","IN FULL D-1","FILL RATE D-1",
-  "Ocorrências quantidade D-1","Ocorrências em R$ D-1","Indisponibilidade de Frota (%)"
-];
-
-function selectedUnits(){
-  const sel=document.querySelector('select[min-w\\[220px\\]]')||document.querySelector('select');
-  if(!sel) return null;
-  const vals=Array.from(sel.selectedOptions||[]).map(o=>o.value);
-  return vals.length? vals : null;
-}
-function unitsSorted(){
-  return Array.from(new Set(DATA.map(r=>r.Unidade))).filter(Boolean).sort();
-}
-
-function valueFor(unit, metric, iso){
-  const list = DATA.filter(r=> r.Unidade===unit && r.Data===iso );
-  if(!list.length) return '';
-  if(metric==="% On-time (calc)"){
-    let lt=0, ln=0; list.forEach(r=>{ lt+=Number(r["Largada (Total de veículos)"])||0; ln+=Number(r["Largada (Veículos que saíram no horario)"])||0; });
-    return lt>0? (ln/lt)*100 : '';
-  }
-  if(["Volume In (tons)","Volume Out (tons)","Corte (KG)","Paletes Pendentes","HE armazém e transporte","Largada (Total de veículos)","Largada (Veículos que saíram no horario)","Reentrega","Ocorrências quantidade D-1","Ocorrências em R$ D-1","Custo MOT (armazém e transporte)","Volume (tons)"].includes(metric)){
-    return list.reduce((s,r)=> s + (Number(r[metric])||0), 0);
-  }
-  const nums = list.map(r=> Number(r[metric]) ).filter(v=> Number.isFinite(v));
-  return nums.length? nums.reduce((a,b)=>a+b,0)/nums.length : '';
-}
-
-let unitsPopulated=false;
-function renderMatrix(iso){
-  const d1 = prevBusinessISO(iso);
-  document.getElementById('infoData').textContent = iso.split('-').reverse().join('/');
-  document.getElementById('infoDataD1').textContent = d1? d1.split('-').reverse().join('/') : '—';
-
-  // populate select options once
-  const sel=document.querySelector('select');
-  if(sel && !unitsPopulated){ sel.innerHTML=''; unitsSorted().forEach(u=>{ const o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); }); unitsPopulated=true; }
-  const units = selectedUnits() || unitsSorted();
-  document.getElementById('countUnits').textContent = units.length;
-
-  const thead = document.getElementById('thead');
-  const tbody = document.getElementById('tbody');
-
-  // Cabeçalho
-  const trh = document.createElement('tr');
-  const th0 = document.createElement('th'); th0.textContent='KPIs'; trh.appendChild(th0);
-  units.forEach(u=>{ const th=document.createElement('th'); th.textContent=u; trh.appendChild(th); });
-  thead.innerHTML=''; thead.appendChild(trh);
-
-  const frag = document.createDocumentFragment();
-
-  const search=document.querySelector('input[placeholder^=Digite]');
-  const q=(search? search.value.toLowerCase(): '');
-  // Grupo D
-  dayMetrics.filter(m=> m.toLowerCase().includes(q)).forEach(m=>{
-    const tr=document.createElement('tr');
-    const th=document.createElement('th'); th.textContent = `( D ) ${m}`; tr.appendChild(th);
-    units.forEach(u=>{
-      const td=document.createElement('td'); td.className='num';
-      const val = valueFor(u, m, iso);
-      let txt='';
-      if(["Ocupação"].includes(m)) txt = val===''?'':fmtPct(val);
-      else txt = fmtNum(val);
-      td.textContent = (txt===''?'—':txt);
-      tr.appendChild(td);
-    });
-    frag.appendChild(tr);
-  });
-
-  // Separador visual
-  const trSep=document.createElement('tr');
-  const thSep=document.createElement('th'); thSep.colSpan = units.length+1; thSep.textContent='KPIs (D‑1 útil)'; thSep.className='row-sep';
-  trSep.appendChild(thSep); frag.appendChild(trSep);
-
-  const search=document.querySelector('input[placeholder^=Digite]');
-  const q=(search? search.value.toLowerCase(): '');
-  // Grupo D-1
-  d1Metrics.filter(m=> m.toLowerCase().includes(q)).forEach(m=>{
-    const tr=document.createElement('tr');
-    const th=document.createElement('th'); th.textContent = `( D-1 ) ${m}`; tr.appendChild(th);
-    units.forEach(u=>{
-      const td=document.createElement('td'); td.className='num';
-      const val = valueFor(u, m, d1);
-      let txt='';
-      if(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)"].includes(m)) txt = val===''?'':fmtPct(val);
-      else if(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"].includes(m)) txt = fmtMoney(val);
-      else txt = fmtNum(val);
-      td.textContent = (txt===''?'—':txt);
-      tr.appendChild(td);
-    });
-    frag.appendChild(tr);
-  });
-
-  tbody.innerHTML='';
-  tbody.appendChild(frag);
-}
-
-/* ===== Bootstrap ===== */
-async function init(){
-  try{
-    await loadExcelFromRepo();
-  const selUnits=document.querySelector('select');
-  if(selUnits){ selUnits.addEventListener('change',()=>{ const iso=document.getElementById('dateRef').value; renderMatrix(iso); }); }
-  const search=document.querySelector('input[placeholder^=Digite]');
-  if(search){ search.addEventListener('input',()=>{ const iso=document.getElementById('dateRef').value; renderMatrix(iso); }); }
-  const fileInput = document.getElementById('fileXlsx');
-  fileInput.addEventListener('change', async (e)=>{
-    const f=e.target.files?.[0]; if(!f) return;
-    const ab = await f.arrayBuffer();
-    const wb = XLSX.read(ab,{type:'array'});
-    parseWorkbookToData(wb);
-    const iso = document.getElementById('dateRef').value; renderMatrix(iso);
-  });
-  }catch(e){ console.warn(e); }
-  const t = new Date();
-  const iso = toISODateLocal(t.getFullYear(),t.getMonth()+1,t.getDate());
-  dateRef.value = iso;
-  renderMatrix(iso);
-}
-
-const dateRef = document.getElementById('dateRef');
-document.getElementById('btnHoje').addEventListener('click',()=>{
-  const t=new Date(); const iso=toISODateLocal(t.getFullYear(),t.getMonth()+1,t.getDate());
-  dateRef.value=iso; renderMatrix(iso);
-});
-document.getElementById('btnVoltar').addEventListener('click',()=>{
-  location.href = location.origin + location.pathname.replace(/[^/]+$/,'') + 'index.html#arm';
-});
-dateRef.addEventListener('change',()=>{
-  const iso = dateRef.value;
-  if(iso) renderMatrix(iso);
-});
-
-init();
-
-document.getElementById('btnBack').addEventListener('click', ()=>{
-  if (history.length > 1) { history.back(); }
-  else { window.close(); }
-});
-
-</script>
+    ReactDOM.createRoot(document.getElementById('root')).render(<ResumoPremium />);
+  </script>
 </body>
 </html>
