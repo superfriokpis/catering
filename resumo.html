@@ -77,7 +77,7 @@
       return Number.isFinite(n)?n:"";
     };
     const fmtNum=(v)=> (v===""||v==null?"":Number(v).toLocaleString("pt-BR"));
-    const fmtPct=(v)=> (v===""||v==null?"":`${Number(v).toFixed(1).replace(".",",")}%`);
+    const fmtPct=(v)=>{ if(v===""||v==null) return ""; const n=Number(v); const scaled=(Math.abs(n)<=1? n*100 : n); return `${scaled.toFixed(1).replace(".",",")}%`; };
     const fmtMoney=(v)=> (v===""||v==null?"":Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0}));
 
     function evalStatus(kpi, rawValue){
@@ -354,8 +354,7 @@
       const toneDot = { none: "bg-slate-300", ok: "bg-emerald-500", warn: "bg-amber-500", bad: "bg-rose-500" }[status.tone] || "bg-slate-300";
       return (
         <div className="flex items-center justify-end gap-2">
-          {/* subtle colored dot; tooltip holds label, but no text rendered */}
-          <span className={`inline-block w-2 h-2 rounded-full ${toneDot}`} aria-label={status.label || ""} title={status.label || ""}></span>
+          <span className={`inline-block w-2 h-2 rounded-full ${toneDot}`} title={status.label || ""}></span>
           <span className="tabular-nums">{text}</span>
         </div>
       );
