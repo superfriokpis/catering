@@ -112,10 +112,10 @@ table.kpi tbody tr:hover td{background:#f6f9ff}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2H5a2 2 0 00-2 2v1h18V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm14 7H3v11a2 2 0 002 2h14a2 2 0 002-2V9zm-9 2h2v5h-2v-5zm0 6h2v2h-2v-2z"/></svg>
             Hoje
           </button>
-          <a href="CATERING_com_resumo.html" class="btn" title="Voltar para o dashboard">
+          <button id="btnVoltar" class="btn" type="button" title="Voltar para o dashboard">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 19l-7-7 7-7v4h8v6h-8v4z"/></svg>
             Voltar ao Dashboard
-          </a>
+          </button>
         </div>
       </div>
       <div class="legend">
@@ -147,19 +147,19 @@ const EXCEL_SHEET = null; // primeira aba
 const toISODateLocal=(y,m,d)=>`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 function parseDateRaw(s){
   if(!s) return new Date('invalid');
-  const iso=String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/); if(iso) return new Date(+iso[1],+iso[2]-1,+iso[3]);
-  const dmY=String(s).match(/^(\d{2})[./](\d{2})[./](\d{4})$/); if(dmY) return new Date(+dmY[3],+dmY[2]-1,+dmY[1]);
+  const iso=String(s).match(/^(\\d{4})-(\\d{2})-(\\d{2})$/); if(iso) return new Date(+iso[1],+iso[2]-1,+iso[3]);
+  const dmY=String(s).match(/^(\\d{2})[./](\\d{2})[./](\\d{4})$/); if(dmY) return new Date(+dmY[3],+dmY[2]-1,+dmY[1]);
   return new Date(s);
 }
 function asNumber(v){
   if(v===null||v===undefined) return '';
   const s=String(v).trim(); if(s==='') return '';
-  const n=Number(s.replace(/R\$\s?/i,'').replace(/\./g,'').replace(',','.').replace(/%/g,''));
+  const n=Number(s.replace(/R\\$\\s?/i,'').replace(/\\./g,'').replace(',','.').replace(/%/g,''));
   return Number.isFinite(n)?n:'';
 }
 function normPct(v){
   if(v===''||v==null) return '';
-  let n=Number(String(v).replace('%','').replace(/\s/g,'').replace(',','.'));
+  let n=Number(String(v).replace('%','').replace(/\\s/g,'').replace(',','.'));
   if(!Number.isFinite(n)) return '';
   if(n>0 && n<=1) return n*100;
   if(n<=100) return n;
@@ -173,7 +173,7 @@ function asDateISO(v){
     return toISODateLocal(d.y,d.m,d.d);
   }
   const s=String(v).trim();
-  const m=s.match(/^(\d{2})[./](\d{2})[./](\d{4})$/); if(m) return toISODateLocal(+m[3],+m[2],+m[1]);
+  const m=s.match(/^(\\d{2})[./](\\d{2})[./](\\d{4})$/); if(m) return toISODateLocal(+m[3],+m[2],+m[1]);
   const dt=new Date(s); return isNaN(dt)?'':toISODateLocal(dt.getFullYear(),dt.getMonth()+1,dt.getDate());
 }
 const PCT=new Set(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","ON TIME D-1","IN FULL D-1","FILL RATE D-1","% On-time (calc)","Indisponibilidade de Frota (%)"]);
@@ -215,9 +215,9 @@ function isRowAllBlank(o){
   for(const k of keys){ const v=o[k]; if(v!=='' && Number(v)!==0) return false; }
   return true;
 }
-function fmtPct(v){ return (v===''||v==null)?'—':(Number(v).toFixed(1).replace('.',',')+'%'); }
-function fmtMoney(v){ return (v===''||v==null)?'—':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}); }
-function fmtNum(v){ return (v===''||v==null)?'—':Number(v).toLocaleString('pt-BR'); }
+function fmtPct(v){ return (v===''||v==null)?'':(Number(v).toFixed(1).replace('.',',')+'%'); }
+function fmtMoney(v){ return (v===''||v==null)?'':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}); }
+function fmtNum(v){ return (v===''||v==null)?'':Number(v).toLocaleString('pt-BR'); }
 
 /* ===== Carregamento ===== */
 let DATA=[];
@@ -302,66 +302,76 @@ function renderMatrix(iso){
   // Grupo D
   dayMetrics.forEach(m=>{
     const tr=document.createElement('tr');
-    const th=document.createElement('th'); th.textContent=m; tr.appendChild(th);
+    const th=document.createElement('th'); th.textContent = `( D ) ${m}`; tr.appendChild(th);
     units.forEach(u=>{
-      const td=document.createElement('td');
-      const v = valueFor(u, m, iso);
-      td.textContent = (m==="Ocupação") ? fmtPct(v) : fmtNum(v);
+      const td=document.createElement('td'); td.className='num';
+      const val = valueFor(u, m, iso);
+      let txt='';
+      if(["Ocupação"].includes(m)) txt = val===''?'':fmtPct(val);
+      else txt = fmtNum(val);
+      td.textContent = (txt===''?'—':txt);
       tr.appendChild(td);
     });
     frag.appendChild(tr);
   });
 
-  // separador
-  const trSep = document.createElement('tr');
-  const tdSep = document.createElement('td'); tdSep.textContent = 'Demais KPIs (D‑1 útil)'; tdSep.colSpan = 1 + units.length;
-  trSep.className = 'row-sep'; trSep.appendChild(tdSep); frag.appendChild(trSep);
+  // Separador visual
+  const trSep=document.createElement('tr');
+  const thSep=document.createElement('th'); thSep.colSpan = units.length+1; thSep.textContent='KPIs (D‑1 útil)'; thSep.className='row-sep';
+  trSep.appendChild(thSep); frag.appendChild(trSep);
 
   // Grupo D-1
   d1Metrics.forEach(m=>{
     const tr=document.createElement('tr');
-    const th=document.createElement('th'); th.textContent=m; tr.appendChild(th);
+    const th=document.createElement('th'); th.textContent = `( D-1 ) ${m}`; tr.appendChild(th);
     units.forEach(u=>{
-      const td=document.createElement('td');
-      const v = valueFor(u, m, d1);
-      if(["ON TIME D-1","IN FULL D-1","FILL RATE D-1","ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","Ocupação","% On-time (calc)","Indisponibilidade de Frota (%)"].includes(m)){
-        td.textContent = fmtPct(v);
-      }else if(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"].includes(m)){
-        td.textContent = fmtMoney(v);
-      }else{
-        td.textContent = fmtNum(v);
-      }
+      const td=document.createElement('td'); td.className='num';
+      const val = valueFor(u, m, d1);
+      let txt='';
+      if(["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)"].includes(m)) txt = val===''?'':fmtPct(val);
+      else if(["Ocorrências em R$ D-1","Custo MOT (armazém e transporte)"].includes(m)) txt = fmtMoney(val);
+      else txt = fmtNum(val);
+      td.textContent = (txt===''?'—':txt);
       tr.appendChild(td);
     });
     frag.appendChild(tr);
   });
 
-  tbody.innerHTML=''; tbody.appendChild(frag);
+  tbody.innerHTML='';
+  tbody.appendChild(frag);
 }
 
-function initDate(){
-  const today = new Date();
-  const iso = toISODateLocal(today.getFullYear(), today.getMonth()+1, today.getDate());
-  document.getElementById('dateRef').value = iso;
+/* ===== Bootstrap ===== */
+async function init(){
+  try{
+    await loadExcelFromRepo();
+  }catch(e){ console.warn(e); }
+  const t = new Date();
+  const iso = toISODateLocal(t.getFullYear(),t.getMonth()+1,t.getDate());
+  dateRef.value = iso;
+  renderMatrix(iso);
 }
 
-document.getElementById('btnHoje').addEventListener('click', ()=>{
-  const today = new Date();
-  const iso = toISODateLocal(today.getFullYear(), today.getMonth()+1, today.getDate());
-  document.getElementById('dateRef').value = iso;
-  renderMatrix(iso);
+const dateRef = document.getElementById('dateRef');
+document.getElementById('btnHoje').addEventListener('click',()=>{
+  const t=new Date(); const iso=toISODateLocal(t.getFullYear(),t.getMonth()+1,t.getDate());
+  dateRef.value=iso; renderMatrix(iso);
+});
+document.getElementById('btnVoltar').addEventListener('click',()=>{
+  location.href = location.origin + location.pathname.replace(/[^/]+$/,'') + 'index.html#arm';
+});
+dateRef.addEventListener('change',()=>{
+  const iso = dateRef.value;
+  if(iso) renderMatrix(iso);
 });
 
-document.getElementById('dateRef').addEventListener('change', (e)=>{
-  renderMatrix(e.target.value);
+init();
+
+document.getElementById('btnBack').addEventListener('click', ()=>{
+  if (history.length > 1) { history.back(); }
+  else { window.close(); }
 });
 
-(async function main(){
-  initDate();
-  await loadExcelFromRepo();
-  const iso = document.getElementById('dateRef').value;
-  renderMatrix(iso);
-})();
 </script>
 </body>
 </html>
