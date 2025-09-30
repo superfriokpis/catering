@@ -17,6 +17,7 @@
     .shadow-premium{box-shadow:0 10px 30px rgba(2,6,23,.12)}
     .chip{box-shadow:0 10px 20px rgba(37,99,235,.12)}
     .tabular-nums{font-variant-numeric:tabular-nums}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:.75rem;border-width:1px;padding:.5rem .75rem}
   </style>
 </head>
 <body>
@@ -75,9 +76,9 @@
       const n=Number(String(v).replace(/R\$\s?/i,"").replace(/\./g,"").replace(",",".").replace(/%/g,""));
       return Number.isFinite(n)?n:"";
     };
-    const fmtNum=(v)=> (v===""||v==null?"—":Number(v).toLocaleString("pt-BR"));
-    const fmtPct=(v)=> (v===""||v==null?"—":`${Number(v).toFixed(1).replace(".",",")}%`);
-    const fmtMoney=(v)=> (v===""||v==null?"—":Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0}));
+    const fmtNum=(v)=> (v===""||v==null?"":Number(v).toLocaleString("pt-BR"));
+    const fmtPct=(v)=> (v===""||v==null?"":`${Number(v).toFixed(1).replace(".",",")}%`);
+    const fmtMoney=(v)=> (v===""||v==null?"":Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0}));
 
     function evalStatus(kpi, rawValue){
       if (rawValue===""||rawValue==null) return {tone:"none", label:"Sem dado"};
@@ -136,27 +137,34 @@
       for (const k of keys){ const v=o[k]; if (v!=="" && Number(v)!==0) return false; } return true;
     }
 
-    function ValueCell({kpi,value,status}){
-      const isMoney = kpi==="Ocorrências em R$ D-1" || kpi==="Custo MOT (armazém e transporte)";
-      const isPct = ["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)","Ocupação","% On-time (calc)"].includes(kpi);
-      const text = isMoney ? fmtMoney(value) : isPct ? fmtPct(value) : fmtNum(value);
-      const toneMap = { none: "bg-slate-200 text-slate-700 border-slate-300", ok: "bg-emerald-100 text-emerald-700 border-emerald-200", warn: "bg-amber-100 text-amber-800 border-amber-200", bad: "bg-rose-100 text-rose-700 border-rose-200" };
+    function Toggle({active,children,onClick}){
       return (
-        <div className="flex items-center justify-end gap-2">
-          <span className={`px-2 py-1 rounded-md border text-[10px] ${toneMap[status.tone]}`}>{status.label}</span>
-          <span className="tabular-nums">{text}</span>
-        </div>
+        <button onClick={onClick} aria-pressed={active}
+                className={`h-9 px-4 rounded-full text-[12px] font-medium border transition
+                            ${active ? "bg-white text-blue-700 border-white shadow" : "bg-white/10 text-white border-white/40 hover:bg-white/20"}`}>
+          {children}
+        </button>
+      );
+    }
+
+    function UnitChip({label,active,onClick}){
+      return (
+        <button onClick={onClick} aria-pressed={active}
+                className={`px-4 h-9 rounded-full text-[12px] font-semibold shadow
+                            ${active ? "bg-blue-600 text-white" : "bg-blue-500/80 text-white hover:bg-blue-500"}`}>
+          {label}
+        </button>
       );
     }
 
     function ResumoPremium({ excelUrl = "data/BI Operacional_Catering.xlsx", sheetName = null, initialDate = toISO(new Date()) }){
-      const [raw,setRaw] = React.useState([]);
-      const [dateRef,setDateRef] = React.useState(initialDate);
-      const [unitsFilter,setUnitsFilter] = React.useState([]);
-      const [query,setQuery] = React.useState("");
-      const [onlyBlocks,setOnlyBlocks] = React.useState({transporte:true, armazem:true, rh:true});
-      const [loading,setLoading] = React.useState(false);
-      const [error,setError] = React.useState("");
+      const [raw,setRaw] = useState([]);
+      const [dateRef,setDateRef] = useState(initialDate);
+      const [unitsFilter,setUnitsFilter] = useState([]); // [] => Todas
+      const [query,setQuery] = useState("");
+      const [onlyBlocks,setOnlyBlocks] = useState({transporte:true, armazem:true, rh:true});
+      const [loading,setLoading] = useState(false);
+      const [error,setError] = useState("");
 
       const ALT_URLS = [excelUrl, "./"+excelUrl, "../"+excelUrl, excelUrl.replace("data/","")];
       const queryExcel = () => new URL(location.href).searchParams.get("excel");
@@ -168,7 +176,7 @@
         throw new Error("Falha ao baixar planilha (404). Use o seletor de arquivo no topo.");
       }
 
-      React.useEffect(()=>{
+      useEffect(()=>{
         let live=true;
         (async()=>{
           setLoading(true); setError("");
@@ -187,12 +195,12 @@
         return ()=>{ live=false; }
       },[excelUrl,sheetName]);
 
-      const units = React.useMemo(()=> Array.from(new Set(raw.map(r=>r.Unidade))).filter(Boolean).sort(), [raw]);
-      const allDates = React.useMemo(()=> new Set(raw.map(r=>r.Data)), [raw]);
-      const d1ISO = React.useMemo(()=> getPrevBusinessDateISO(allDates, dateRef), [allDates,dateRef]);
-      const visibleUnits = React.useMemo(()=> (unitsFilter.length ? unitsFilter : units), [unitsFilter,units]);
+      const units = useMemo(()=> Array.from(new Set(raw.map(r=>r.Unidade))).filter(Boolean).sort(), [raw]);
+      const allDates = useMemo(()=> new Set(raw.map(r=>r.Data)), [raw]);
+      const d1ISO = useMemo(()=> getPrevBusinessDateISO(allDates, dateRef), [allDates,dateRef]);
+      const visibleUnits = useMemo(()=> (unitsFilter.length ? unitsFilter : units), [unitsFilter,units]);
 
-      const dataMatrix = React.useMemo(()=>{
+      const dataMatrix = useMemo(()=>{
         const byUnitMetric={};
         const getVal=(unit,metric,iso)=>{
           const list = raw.filter(r=> r.Unidade===unit && r.Data===iso );
@@ -213,36 +221,18 @@
         return byUnitMetric;
       },[raw,visibleUnits,dateRef,d1ISO]);
 
-      React.useEffect(()=>{
-        const input = document.getElementById("fileXlsx");
-        if (!input) return;
-        const onChange = async (e)=>{
-          const f=e.target.files?.[0]; if(!f) return;
-          setLoading(true); setError("");
-          try{
-            const ab = await f.arrayBuffer();
-            const wb = XLSX.read(ab,{type:"array"});
-            const ws = wb.Sheets[sheetName || wb.SheetNames[0]];
-            const ref = XLSX.utils.decode_range(ws['!ref']); ref.s.r=Math.max(ref.s.r,2); ref.s.c=Math.max(ref.s.c,1);
-            const newRef = XLSX.utils.encode_range(ref);
-            let rows = XLSX.utils.sheet_to_json(ws,{defval:"",range:newRef});
-            rows = rows.map(normalizeRow).filter(o=>!isRowAllBlank(o));
-            setRaw(rows);
-          }catch(err){ setError(String(err.message||err)); }
-          finally{ setLoading(false); }
-        };
-        input.addEventListener('change', onChange);
-        return ()=> input.removeEventListener('change', onChange);
-      },[]);
+      const toggleUnit = (u)=> setUnitsFilter(prev=>{
+        const set = new Set(prev);
+        if (set.has(u)) set.delete(u); else set.add(u);
+        return Array.from(set);
+      });
 
-      const filteredBlocks = React.useMemo(()=> BLOCKS.filter(b=> onlyBlocks[b.key]), [onlyBlocks]);
-      const selectedUnits = (unitsFilter.length?unitsFilter:units);
       return (
         <div className="min-h-screen text-[13px] text-slate-900">
           <div className="mx-auto max-w-[1420px] p-4 mt-4 rounded-2xl text-white shadow-premium"
                style={{background:"radial-gradient(1200px 400px at 20% -80%, #5b8bff33 0%, transparent 60%), linear-gradient(100deg, #1e40af, #2563eb 40%, #3b82f6)"}}>
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
+              <div className="min-w-[280px]">
                 <h1 className="text-xl font-extrabold tracking-tight">Resumo do Dia — KPIs</h1>
                 <p className="text-xs/5 opacity-95">Largada &amp; Ocupação do <b>Dia (D)</b>. Demais KPIs por <b>D-1 útil</b>. Filtros por unidade e busca por KPI.</p>
                 <div className="flex flex-wrap gap-2 mt-3">
@@ -254,54 +244,42 @@
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/15 border border-white/30 text-white text-[11px] font-medium px-3 py-2">Linhas (D-1): demais KPIs</span>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <label className="flex flex-col gap-1 text-xs">
-                  Data
+
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 text-xs">
+                  <span className="opacity-90">Data</span>
                   <input type="date" value={dateRef} onChange={e=>setDateRef(e.target.value)}
                          className="h-9 rounded-xl border border-white/40 bg-white/10 text-white px-3 backdrop-blur-sm placeholder-white/70"/>
                 </label>
                 <button onClick={()=>setDateRef(toISO(new Date()))}
                         className="h-9 rounded-xl border border-white/40 bg-white/15 px-3 text-xs hover:bg-white/25">Hoje</button>
-                <div className="w-[1px] h-9 bg-white/30 mx-1"/>
-                <div className="flex items-center gap-2 text-xs">
-                  {BLOCKS.map(b=> (
-                    <label key={b.key} className="inline-flex items-center gap-2">
-                      <input type="checkbox" checked={onlyBlocks[b.key]} onChange={e=>setOnlyBlocks(s=>({...s,[b.key]:e.target.checked}))}/>
-                      <span className="select-none">{b.title}</span>
-                    </label>
-                  ))}
+                <div className="w-px h-9 bg-white/30" />
+                <div className="flex items-center gap-2">
+                  <Toggle active={!!onlyBlocks.transporte} onClick={()=>setOnlyBlocks(s=>({...s,transporte:!s.transporte}))}>Transporte</Toggle>
+                  <Toggle active={!!onlyBlocks.armazem} onClick={()=>setOnlyBlocks(s=>({...s,armazem:!s.armazem}))}>Armazém</Toggle>
+                  <Toggle active={!!onlyBlocks.rh} onClick={()=>setOnlyBlocks(s=>({...s,rh:!s.rh}))}>RH</Toggle>
                 </div>
               </div>
             </div>
+
             <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
-              <div className="text-white/90"><b>Data:</b> {new Date(dateRef).toLocaleDateString("pt-BR")} • <b>D-1 útil:</b> {React.useMemo(()=>d1ISO? new Date(d1ISO).toLocaleDateString("pt-BR") : "—",[d1ISO])}</div>
-              <div className="text-white/90">• <b>Unidades:</b> {units.length || "—"}</div>
+              <div className="text-white/90"><b>Data:</b> {new Date(dateRef).toLocaleDateString("pt-BR")} • <b>D-1 útil:</b> {d1ISO? new Date(d1ISO).toLocaleDateString("pt-BR"): "—"}</div>
+              <div className="text-white/90">• <b>Unidades:</b> {useMemo(()=>Array.from(new Set(raw.map(r=>r.Unidade))).length,[raw]) || "—"}</div>
             </div>
           </div>
 
-          <div className="mx-auto max-w-[1420px] mt-4 px-4">
-            <div className="flex flex-wrap gap-3 items-center">
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-slate-600">Unidades:</span>
-                <select multiple value={unitsFilter}
-                        onChange={(e)=> setUnitsFilter(Array.from(e.target.selectedOptions).map(o=>o.value))}
-                        className="min-w-[220px] h-10 rounded-xl border border-slate-300 bg-white px-3">
-                  {units.map(u=> <option key={u} value={u}>{u}</option>)}
-                </select>
-                {!!unitsFilter.length && (
-                  <button onClick={()=>setUnitsFilter([])} className="text-xs px-3 h-8 rounded-lg border border-slate-300 hover:bg-slate-50">Limpar</button>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-slate-600">Buscar KPI:</span>
-                <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Digite parte do nome…"
-                       className="h-10 rounded-xl border border-slate-300 bg-white px-3 min-w-[260px]"/>
-              </div>
-              <div className="flex items-center gap-2 text-xs ml-auto">
-                <span className="text-slate-600">Planilha:</span>
-                <input id="fileXlsx" type="file" accept=".xlsx"
-                       className="h-10 rounded-xl border border-slate-300 bg-white px-3"/>
-              </div>
+          <div className="mx-auto max-w-[1420px] mt-3 px-4 flex items-center gap-2 flex-wrap">
+            <UnitChip label="Todas" active={unitsFilter.length===0} onClick={()=>setUnitsFilter([])}/>
+            {useMemo(()=>units, [units]).map(u=> (
+              <UnitChip key={u} label={u} active={unitsFilter.includes(u)} onClick={()=>toggleUnit(u)}/>
+            ))}
+            <div className="ml-auto flex items-center gap-2">
+              <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Buscar KPI…"
+                     className="h-9 rounded-full border border-slate-300 bg-white px-3 min-w-[220px] text-[12px]"/>
+              <label className="btn bg-white text-blue-700 border-slate-300 cursor-pointer">
+                <input id="fileXlsx" type="file" accept=".xlsx" className="hidden"/>
+                Carregar XLSX
+              </label>
             </div>
           </div>
 
@@ -317,8 +295,8 @@
                     <thead>
                       <tr>
                         <th className="sticky left-0 z-20 bg-gradient-to-r from-white to-white/95 text-left px-3 py-3 text-[11px] font-bold text-slate-800 border-b border-slate-200 min-w-[260px]">KPI</th>
-                        {selectedUnits.map(u=> (
-                          <th key={u} className="sticky top-0 z-10 bg-gradient-to-b from-blue-600 to-blue-700 text-white px-3 py-3 text-[11px] border-l border-white/20">{u}</th>
+                        {visibleUnits.map(u=> (
+                          <th key={u} className="sticky top-0 z-10 bg-gradient-to-b from-blue-600 to-blue-700 text-white px-3 py-3 text-[11px] border-l border-white/20 text-center">{u}</th>
                         ))}
                       </tr>
                     </thead>
@@ -326,26 +304,26 @@
                       {BLOCKS.filter(b=>onlyBlocks[b.key]).map(b=>(
                         <Fragment key={b.key}>
                           <tr>
-                            <td colSpan={selectedUnits.length + 1}
+                            <td colSpan={visibleUnits.length + 1}
                                 className="bg-slate-50 text-slate-700 font-semibold text-xs px-3 py-2 border-y border-slate-200">{b.title} — (D)</td>
                           </tr>
                           {b.kpisD.filter(k=>k.toLowerCase().includes(query.toLowerCase())).map(kpi=> (
                             <tr key={kpi} className="hover:bg-slate-50/60">
                               <th className="sticky left-0 bg-gradient-to-r from-white to-white/95 text-left px-3 py-2 text-[12px] font-semibold text-slate-800 border-b border-slate-200">{kpi}</th>
-                              {selectedUnits.map(u=>{
+                              {visibleUnits.map(u=>{
                                 const v = (dataMatrix?.[u]||{})[kpi]; const s = evalStatus(kpi,v);
                                 return <td key={u} className="text-right px-3 py-2 border-b border-slate-200 align-middle whitespace-nowrap"><ValueCell kpi={kpi} value={v} status={s}/></td>;
                               })}
                             </tr>
                           ))}
                           <tr>
-                            <td colSpan={selectedUnits.length + 1}
+                            <td colSpan={visibleUnits.length + 1}
                                 className="bg-indigo-50/80 text-indigo-800 font-semibold text-xs px-3 py-2 border-y border-slate-200">{b.title} — (D-1 útil)</td>
                           </tr>
                           {b.kpisD1.filter(k=>k.toLowerCase().includes(query.toLowerCase())).map(kpi=> (
                             <tr key={kpi} className="hover:bg-slate-50/60">
                               <th className="sticky left-0 bg-gradient-to-r from-white to-white/95 text-left px-3 py-2 text-[12px] font-semibold text-slate-800 border-b border-slate-200">{kpi}</th>
-                              {selectedUnits.map(u=>{
+                              {visibleUnits.map(u=>{
                                 const v = (dataMatrix?.[u]||{})[kpi]; const s = evalStatus(kpi,v);
                                 return <td key={u} className="text-right px-3 py-2 border-b border-slate-200 align-middle whitespace-nowrap"><ValueCell kpi={kpi} value={v} status={s}/></td>;
                               })}
@@ -365,6 +343,20 @@
             <button className="px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-50"
                     onclick="if(history.length>1) history.back(); else window.close();">Voltar</button>
           </div>
+        </div>
+      );
+    }
+
+    function ValueCell({kpi,value,status}){
+      const isMoney = kpi==="Ocorrências em R$ D-1" || kpi==="Custo MOT (armazém e transporte)";
+      const isPct = ["ILA %","IRA %","Perdas (avarias e diferença de estoque)","Turnover","Absenteísmo","ON TIME D-1","IN FULL D-1","FILL RATE D-1","Indisponibilidade de Frota (%)","Ocupação","% On-time (calc)"].includes(kpi);
+      const text = isMoney ? fmtMoney(value) : isPct ? fmtPct(value) : fmtNum(value);
+      const toneDot = { none: "bg-slate-300", ok: "bg-emerald-500", warn: "bg-amber-500", bad: "bg-rose-500" }[status.tone] || "bg-slate-300";
+      return (
+        <div className="flex items-center justify-end gap-2">
+          {/* subtle colored dot; tooltip holds label, but no text rendered */}
+          <span className={`inline-block w-2.5 h-2.5 rounded-full ${toneDot}`} title={status.label || ""}></span>
+          <span className="tabular-nums">{text}</span>
         </div>
       );
     }
