@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -185,6 +186,122 @@ a, button, input, summary { outline-offset: 2px; }
   .tbl-farol { font-size: 12px; }
 }
 </style>
+
+<style id="glass-upgrade">
+/* ===== Premium / Glassmorphism Upgrade (visual only — no logic changed) ===== */
+
+/* Background futurista em azul/branco com leve gradiente */
+html, body {
+  background: linear-gradient(135deg, #f8fbff 0%, #eaf2ff 100%) !important;
+}
+
+/* Header com gradiente discreto e leve blur */
+.brand-grad {
+  background: linear-gradient(90deg, rgba(37,99,235,0.95), rgba(59,130,246,0.95)) !important;
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+}
+
+/* Tipografia Premium: títulos e labels com Poppins; demais com Inter */
+h1, h2, h3, .data-section-title, .card-label {
+  font-family: 'Poppins', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  letter-spacing: -0.2px;
+}
+
+/* Pills, tabs e botões com microinteração */
+.tab, .pill, .btn {
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+}
+.tab:hover, .pill:hover, .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+}
+
+/* Cards com glassmorphism + profundidade */
+.kpi-card {
+  background: rgba(255, 255, 255, 0.16) !important;
+  backdrop-filter: blur(12px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.10) !important;
+}
+.kpi-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 18px 38px rgba(37, 99, 235, 0.22) !important;
+}
+
+/* Borda superior mantém semântica de status, mas com brilho sutil */
+.ok    { border-top-color: var(--status-ok-border) !important; }
+.warn  { border-top-color: var(--status-warn-border) !important; }
+.bad   { border-top-color: var(--status-bad-border) !important; }
+.neutral { border-top-color: var(--status-neutral-border) !important; }
+
+/* Ícones sutis por status — substituem textos longos (sem mexer no JS) */
+.kpi-card.ok .card-label::after   { content: "  ✅"; font-size: 13px; opacity: .9; }
+.kpi-card.warn .card-label::after { content: "  ⚠️"; font-size: 13px; opacity: .9; }
+.kpi-card.bad .card-label::after  { content: "  ⭕"; font-size: 13px; opacity: .9; }
+
+/* Valores dos cards com leve brilho em metas atingidas/alertas */
+.kpi-card .card-value {
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+}
+.kpi-card.ok   .card-value { filter: drop-shadow(0 1px 6px rgba(16,185,129,.25)); }
+.kpi-card.warn .card-value { filter: drop-shadow(0 1px 6px rgba(249,115,22,.22)); }
+.kpi-card.bad  .card-value { filter: drop-shadow(0 1px 6px rgba(244,63,94,.22)); }
+
+/* Seções (tabelas) com container premium */
+.data-section {
+  background: rgba(255,255,255,0.75) !important;
+  backdrop-filter: blur(8px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(160%) !important;
+  border: 1px solid rgba(255,255,255,0.45) !important;
+  box-shadow: 0 14px 36px rgba(2, 6, 23, 0.08) !important;
+  border-radius: 20px !important;
+}
+.data-section-header {
+  background: linear-gradient(90deg, rgba(241,245,249,0.9), rgba(226,232,240,0.9)) !important;
+}
+
+/* Cabeçalho da tabela com gradiente azul discreto e fonte mais nítida */
+table.kpi thead th {
+  background: linear-gradient(90deg, var(--brand-primary-dark), var(--brand-primary)) !important;
+  color: #fff !important;
+  text-shadow: 0 1px 0 rgba(0,0,0,.15);
+  letter-spacing: .2px;
+}
+
+/* Linhas da tabela com hover sutil */
+table.kpi tbody tr:hover {
+  background-color: rgba(37,99,235,0.08) !important;
+}
+
+/* Badges de metas com vidro leve */
+#metasBadges .pill {
+  background: rgba(255,255,255,0.6) !important;
+  border-color: rgba(255,255,255,0.7) !important;
+  backdrop-filter: blur(6px);
+}
+
+/* FAB e painel de insights com upgrade visual */
+.fab, .insights-fab {
+  box-shadow: 0 18px 36px rgba(2,6,23,.18) !important;
+}
+.insights-panel {
+  backdrop-filter: blur(8px);
+}
+
+/* Micro animação para headers "grudados" ao rolar */
+.app-header.is-stuck {
+  box-shadow: 0 10px 28px rgba(2,6,23,.18) !important;
+  transform: translateZ(0);
+}
+
+/* Mantém contraste em células com status na tabela */
+table.kpi tbody td {
+  transition: background-color .2s ease, color .2s ease;
+}
+</style>
+
 </head>
 
 <body class="bg-slate-50">
