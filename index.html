@@ -197,7 +197,10 @@ html, body {
 
 /* Header com gradiente discreto e leve blur */
 .brand-grad {
-  background: linear-gradient(90deg, rgba(37,99,235,0.95), rgba(59,130,246,0.95)) !important;
+  background:
+    linear-gradient(100deg, rgba(30,64,175,0.96) 0%, rgba(29,78,216,0.96) 55%, rgba(37,99,235,0.96) 100%),
+    radial-gradient(1200px 300px at 20% -20%, rgba(255,255,255,0.12), transparent 60%),
+    radial-gradient(800px 200px at 80% 0%, rgba(255,255,255,0.08), transparent 55%) !important;
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
 }
